@@ -52,4 +52,4 @@ For the experiments the state of the art is represented by the following command
 zstd -dc compressed_file.Z | {grep,rg} -c regex
 ```
 The experiments show that our tool outperforms the state of the art, even when decompression and search are done in parallel.
-The detailed results of this comparison are available [here]()
+The detailed results of this comparison are available [here](https://pevalme.github.io/zearch/graphs/index.html)
