@@ -1,0 +1,131 @@
+[
+{
+"Regex": "r1",
+"zearch": {"avg": 5.300, "err": 0.346},
+"zrg_1CPU": {"avg": 8.000, "err": 0.000},
+"zrg_2CPU": {"avg": 7.100, "err": 0.226},
+"zgrep_1CPU": {"avg": 6.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 5.300, "err": 0.346},
+"MatchesG": 356,
+"MatchesGG": 356,
+"MatchesR": 356
+},
+{
+"Regex": "r2",
+"zearch": {"avg": 3.800, "err": 0.302},
+"zrg_1CPU": {"avg": 8.000, "err": 0.000},
+"zrg_2CPU": {"avg": 7.100, "err": 0.406},
+"zgrep_1CPU": {"avg": 6.800, "err": 0.302},
+"zgrep_2CPU": {"avg": 6.000, "err": 0.000},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "r3",
+"zearch": {"avg": 4.600, "err": 0.369},
+"zrg_1CPU": {"avg": 8.100, "err": 0.226},
+"zrg_2CPU": {"avg": 7.300, "err": 0.346},
+"zgrep_1CPU": {"avg": 6.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 5.500, "err": 0.377},
+"MatchesG": 25,
+"MatchesGG": 25,
+"MatchesR": 25
+},
+{
+"Regex": "r4",
+"zearch": {"avg": 4.100, "err": 0.226},
+"zrg_1CPU": {"avg": 8.800, "err": 0.302},
+"zrg_2CPU": {"avg": 7.600, "err": 0.369},
+"zgrep_1CPU": {"avg": 6.500, "err": 0.377},
+"zgrep_2CPU": {"avg": 6.000, "err": 0.000},
+"MatchesG": 235,
+"MatchesGG": 235,
+"MatchesR": 235
+},
+{
+"Regex": "r5",
+"zearch": {"avg": 4.000, "err": 0.000},
+"zrg_1CPU": {"avg": 8.000, "err": 0.000},
+"zrg_2CPU": {"avg": 7.200, "err": 0.302},
+"zgrep_1CPU": {"avg": 7.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 6.200, "err": 0.302},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "r6",
+"zearch": {"avg": 5.500, "err": 0.377},
+"zrg_1CPU": {"avg": 10.700, "err": 0.346},
+"zrg_2CPU": {"avg": 8.400, "err": 0.369},
+"zgrep_1CPU": {"avg": 8.400, "err": 0.369},
+"zgrep_2CPU": {"avg": 7.200, "err": 0.302},
+"MatchesG": 29,
+"MatchesGG": 29,
+"MatchesR": 29
+},
+{
+"Regex": "r7",
+"zearch": {"avg": 4.600, "err": 0.369},
+"zrg_1CPU": {"avg": 12.000, "err": 0.000},
+"zrg_2CPU": {"avg": 9.700, "err": 0.346},
+"zgrep_1CPU": {"avg": 7.700, "err": 0.346},
+"zgrep_2CPU": {"avg": 7.200, "err": 0.302},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "r8",
+"zearch": {"avg": 4.900, "err": 0.226},
+"zrg_1CPU": {"avg": 11.000, "err": 0.000},
+"zrg_2CPU": {"avg": 8.800, "err": 0.302},
+"zgrep_1CPU": {"avg": 7.200, "err": 0.302},
+"zgrep_2CPU": {"avg": 6.400, "err": 0.369},
+"MatchesG": 355,
+"MatchesGG": 355,
+"MatchesR": 355
+},
+{
+"Regex": "r9",
+"zearch": {"avg": 5.000, "err": 0.000},
+"zrg_1CPU": {"avg": 9.000, "err": 0.000},
+"zrg_2CPU": {"avg": 7.700, "err": 0.483},
+"zgrep_1CPU": {"avg": 7.300, "err": 0.346},
+"zgrep_2CPU": {"avg": 6.200, "err": 0.302},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "r10",
+"zearch": {"avg": 4.900, "err": 0.226},
+"zrg_1CPU": {"avg": 10.300, "err": 0.346},
+"zrg_2CPU": {"avg": 8.200, "err": 0.452},
+"zgrep_1CPU": {"avg": 7.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 6.200, "err": 0.302},
+"MatchesG": 5,
+"MatchesGG": 5,
+"MatchesR": 5
+},
+{
+"Regex": "r11",
+"zearch": {"avg": 5.000, "err": 0.000},
+"zrg_1CPU": {"avg": 9.000, "err": 0.337},
+"zrg_2CPU": {"avg": 7.600, "err": 0.500},
+"zgrep_1CPU": {"avg": 6.900, "err": 0.226},
+"zgrep_2CPU": {"avg": 6.200, "err": 0.302},
+"MatchesG": 40,
+"MatchesGG": 40,
+"MatchesR": 40
+},
+{
+"Regex": "All",
+"zearch": {"avg": 4.700, "err": 0.118},
+"zrg_1CPU": {"avg": 9.355, "err": 0.259},
+"zgrep_1CPU": {"avg": 6.982, "err": 0.141},
+"zrg_2CPU": {"avg": 7.882, "err": 0.175},
+"zgrep_2CPU": {"avg": 6.218, "err": 0.128}
+}
+]

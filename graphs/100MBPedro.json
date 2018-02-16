@@ -1,0 +1,83 @@
+[
+{
+"Regex": "r1",
+"rg": {"avg": 24, "err": 0},
+"grep": {"avg": 24, "err": 0},
+"zearch": {"avg": 2.000, "err": 0.000},
+"zrg": {"avg": 24, "err": 0},
+"zgrep": {"avg": 24, "err": 0},
+"gzip": {"avg": 444.000, "err": 0.000},
+"repair": {"avg": 549.000, "err": 0.000},
+"zstd": {"avg": 93.333, "err": 0.000},
+"MatchesG": 17476267,
+"MatchesGG": "T.O.",
+"MatchesR": "T.O."
+},
+{
+"Regex": "r2",
+"rg": {"avg": 22, "err": 0},
+"grep": {"avg": 22, "err": 0},
+"zearch": {"avg": 2.000, "err": 0.000},
+"zrg": {"avg": 22, "err": 0},
+"zgrep": {"avg": 22, "err": 0},
+"gzip": {"avg": 444.000, "err": 0.000},
+"repair": {"avg": 556.667, "err": 0.000},
+"zstd": {"avg": 92.333, "err": 0.000},
+"MatchesG": 17476266,
+"MatchesGG": "T.O.",
+"MatchesR": "T.O."
+},
+{
+"Regex": "r3",
+"rg": {"avg": 24, "err": 0},
+"grep": {"avg": 24, "err": 0},
+"zearch": {"avg": 2.100, "err": 0.226},
+"zrg": {"avg": 24, "err": 0},
+"zgrep": {"avg": 24, "err": 0},
+"gzip": {"avg": 444.000, "err": 0.000},
+"repair": {"avg": 552.000, "err": 0.000},
+"zstd": {"avg": 93.333, "err": 0.000},
+"MatchesG": 0,
+"MatchesGG": "T.O.",
+"MatchesR": "T.O."
+},
+{
+"Regex": "r4",
+"rg": {"avg": 26, "err": 0},
+"grep": {"avg": 27.300, "err": 0.346},
+"zearch": {"avg": 2.100, "err": 0.226},
+"zrg": {"avg": 26, "err": 0},
+"zgrep": {"avg": 143.000, "err": 1.431},
+"gzip": {"avg": 444.333, "err": 0.000},
+"repair": {"avg": 549.333, "err": 0.000},
+"zstd": {"avg": 93.667, "err": 0.000},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": "T.O."
+},
+{
+"Regex": "r5",
+"rg": {"avg": 26, "err": 0},
+"grep": {"avg": 28.500, "err": 0.377},
+"zearch": {"avg": 2.100, "err": 0.226},
+"zrg": {"avg": 26, "err": 0},
+"zgrep": {"avg": 141.600, "err": 2.413},
+"gzip": {"avg": 444.000, "err": 0.000},
+"repair": {"avg": 549.333, "err": 0.000},
+"zstd": {"avg": 93.000, "err": 0.000},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": "T.O."
+},
+{
+"Regex": "All",
+"rg": {"avg": 24.400, "err": 0.419},
+"grep": {"avg": 25.160, "err": 0.673},
+"zearch": {"avg": 2.060, "err": 0.066},
+"zrg": {"avg": 24.400, "err": 0.419},
+"zgrep": {"avg": 70.920, "err": 16.327},
+"gzip": {"avg": 444.067, "err": 0.143},
+"repair": {"avg": 551.267, "err": 3.706},
+"zstd": {"avg": 93.133, "err": 0.354}
+}
+]

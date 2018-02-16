@@ -1,0 +1,87 @@
+[
+{
+"Regex": "r1",
+"zearch": {"avg": 10.600, "err": 0.369},
+"zrg_1CPU": {"avg": 12.700, "err": 0.346},
+"zrg_2CPU": {"avg": 10.500, "err": 0.377},
+"zgrep_1CPU": {"avg": 9.400, "err": 0.369},
+"zgrep_2CPU": {"avg": 8.100, "err": 0.226},
+"MatchesG": 44227,
+"MatchesGG": 44227,
+"MatchesR": 44227
+},
+{
+"Regex": "r2",
+"zearch": {"avg": 7.600, "err": 0.369},
+"zrg_1CPU": {"avg": 9.300, "err": 0.346},
+"zrg_2CPU": {"avg": 8.300, "err": 0.346},
+"zgrep_1CPU": {"avg": 7.900, "err": 0.226},
+"zgrep_2CPU": {"avg": 7.100, "err": 0.226},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "r3",
+"zearch": {"avg": 9.200, "err": 0.302},
+"zrg_1CPU": {"avg": 9.700, "err": 0.346},
+"zrg_2CPU": {"avg": 8.400, "err": 0.369},
+"zgrep_1CPU": {"avg": 8.100, "err": 0.226},
+"zgrep_2CPU": {"avg": 7.300, "err": 0.346},
+"MatchesG": 728,
+"MatchesGG": 728,
+"MatchesR": 728
+},
+{
+"Regex": "r4",
+"zearch": {"avg": 9.700, "err": 0.346},
+"zrg_1CPU": {"avg": 13.200, "err": 0.302},
+"zrg_2CPU": {"avg": 10.800, "err": 0.302},
+"zgrep_1CPU": {"avg": 10.600, "err": 0.769},
+"zgrep_2CPU": {"avg": 8.400, "err": 0.369},
+"MatchesG": 11127,
+"MatchesGG": 11127,
+"MatchesR": 11127
+},
+{
+"Regex": "r5",
+"zearch": {"avg": 11.000, "err": 0.000},
+"zrg_1CPU": {"avg": 11.500, "err": 0.377},
+"zrg_2CPU": {"avg": 9.600, "err": 0.369},
+"zgrep_1CPU": {"avg": 9.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 8.100, "err": 0.226},
+"MatchesG": 11585,
+"MatchesGG": 11585,
+"MatchesR": 11585
+},
+{
+"Regex": "r6",
+"zearch": {"avg": 12.600, "err": 0.369},
+"zrg_1CPU": {"avg": 12.000, "err": 0.337},
+"zrg_2CPU": {"avg": 10.200, "err": 0.302},
+"zgrep_1CPU": {"avg": 10.100, "err": 0.226},
+"zgrep_2CPU": {"avg": 8.400, "err": 0.369},
+"MatchesG": 13930,
+"MatchesGG": 13930,
+"MatchesR": 13930
+},
+{
+"Regex": "r7",
+"zearch": {"avg": 8.500, "err": 0.377},
+"zrg_1CPU": {"avg": 20.200, "err": 0.302},
+"zrg_2CPU": {"avg": 16.600, "err": 0.369},
+"zgrep_1CPU": {"avg": 11.000, "err": 0.000},
+"zgrep_2CPU": {"avg": 8.700, "err": 0.346},
+"MatchesG": 0,
+"MatchesGG": 0,
+"MatchesR": 0
+},
+{
+"Regex": "All",
+"zearch": {"avg": 9.886, "err": 0.380},
+"zrg_1CPU": {"avg": 12.657, "err": 0.800},
+"zgrep_1CPU": {"avg": 9.443, "err": 0.284},
+"zrg_2CPU": {"avg": 10.629, "err": 0.623},
+"zgrep_2CPU": {"avg": 8.014, "err": 0.162}
+}
+]
