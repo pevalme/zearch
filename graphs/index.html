@@ -58,11 +58,6 @@ div {
 	float: none;
 }
 
-.description {
-  width: 80%;
-  margin: auto;
-}
-
 .list {
 	width: 100%;
   float: left;
@@ -146,15 +141,14 @@ function checkbox_clicked(checkboxElem) {
 </script>
 <div>
 <h1><center> Tools </center></h1>
-<p id="p1"> <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a>: Run with maximum dfa-size-limit and regex-size-limit. Version: 0.7.1</p>
-<p id="p2"> <a href="https://ftp.gnu.org/gnu/grep/">grep</a>: Version: 3.1</p>
-<p id="p3"> <a href="https://github.com/pevalme/zearch">zearch</a>: Using the algorithms described <a href="https://pevalme.github.io/zearch/main.pdf">here</a></p>
-<p id="p4"> zgrep: Search with grep on the uncompressed text as it is recovered with zstd. Uses two processes.</p>
-<p id="p5"> zrg: Search with ripgrep on the uncompressed text as it is recovered with zstd. Uses two processes.</p>
-<p id="p6"> <a href="http://manpages.ubuntu.com/manpages/trusty/man1/gzip.1.html">gzip</a>: Output sent to dev/null. Arguments used as in zgrep (-cdfq). Version: 1.6</p>
-<p id="p7"> <a href="https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/re-pair/repair110811.tar.gz">repair</a>: Output sent to dev/null. Version: 110811</p>
-<p id="p8"> <a href="https://github.com/facebook/zstd">zstd</a>: Output sent to dev/null. Version: 1.3.2</p>
-</div>
+<p id="p1"> <a href="https://github.com/pevalme/zearch">zearch</a>: Using the algorithms described <a href="https://pevalme.github.io/zearch/main.pdf">here</a></p>
+<p id="p2"> zgrep_lz4: Search with grep on the uncompressed text as it is recovered with <a href="https://github.com/lz4/lz4">lz4</a>. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>
+<p id="p3"> zgrep_zstd: Search with grep on the uncompressed text as it is recovered with <a href="https://github.com/facebook/zstd">zstd</a>. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>
+<p id="p4"> <a href="https://ftp.gnu.org/gnu/grep/">grep</a>: Version: 3.1</p>
+<p id="p5"> zrg_lz4: search with ripgrep on the uncompressed text as it is recovered with lz4. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>
+<p id="p6"> zrg_zstd: search with ripgrep on the uncompressed text as it is recovered with zstd. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>
+<p id="p7"> <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a>: Run with maximum dfa-size-limit and regex-size-limit. Version: 0.7.1</p>
+<p>We omitted LZgrep and GNgrep from these experiments since, as shown in <a href="https://pevalme.github.io/zearch/main.pdf">our paper</a>, they are not competitive with the tools considered here.</p>
 <br>
 <h1><center> Overview </center></h1>
 <div class="description">
@@ -198,7 +192,6 @@ File containing English subtitles extracted from the <a href="http://opus.nlpl.e
   document.getElementById("p5").style.color = color(5);
   document.getElementById("p6").style.color = color(6);
   document.getElementById("p7").style.color = color(7);
-  document.getElementById("p8").style.color = color(8);
 </script>
 <div class="graphs Subtitles">
 <h2><center> Graphs </center></h2>
@@ -207,7 +200,7 @@ File containing English subtitles extracted from the <a href="http://opus.nlpl.e
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBSubtitles" width="900" height="600"></svg>
+<svg id="svg100KBSubtitles" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -351,54 +344,8 @@ d3.json("100KBSubtitles.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -423,7 +370,7 @@ d3.json("100KBSubtitles.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBSubtitles_cactus" width="900" height="600"></svg>
+<svg id="svg100KBSubtitles_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -656,7 +603,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBSubtitles" width="900" height="600"></svg>
+<svg id="svg25MBSubtitles" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -800,54 +747,8 @@ d3.json("25MBSubtitles.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -872,7 +773,7 @@ d3.json("25MBSubtitles.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBSubtitles_cactus" width="900" height="600"></svg>
+<svg id="svg25MBSubtitles_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1105,7 +1006,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBSubtitles" width="900" height="600"></svg>
+<svg id="svg100MBSubtitles" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1249,54 +1150,8 @@ d3.json("100MBSubtitles.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -1321,7 +1176,7 @@ d3.json("100MBSubtitles.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBSubtitles_cactus" width="900" height="600"></svg>
+<svg id="svg100MBSubtitles_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1595,7 +1450,7 @@ A sample of the public timeline recorded by <a href="https://www.githubarchive.o
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBJSON" width="900" height="600"></svg>
+<svg id="svg100KBJSON" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1739,54 +1594,8 @@ d3.json("100KBJSON.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -1811,7 +1620,7 @@ d3.json("100KBJSON.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBJSON_cactus" width="900" height="600"></svg>
+<svg id="svg100KBJSON_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2044,7 +1853,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBJSON" width="900" height="600"></svg>
+<svg id="svg25MBJSON" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2188,54 +1997,8 @@ d3.json("25MBJSON.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -2260,7 +2023,7 @@ d3.json("25MBJSON.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBJSON_cactus" width="900" height="600"></svg>
+<svg id="svg25MBJSON_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2493,7 +2256,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBJSON" width="900" height="600"></svg>
+<svg id="svg100MBJSON" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2637,54 +2400,8 @@ d3.json("100MBJSON.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -2709,7 +2426,7 @@ d3.json("100MBJSON.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBJSON_cactus" width="900" height="600"></svg>
+<svg id="svg100MBJSON_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2979,7 +2696,7 @@ A sample of the <a href="http://storage.googleapis.com/books/ngrams/books/datase
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBCSV" width="900" height="600"></svg>
+<svg id="svg100KBCSV" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3123,54 +2840,8 @@ d3.json("100KBCSV.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -3195,7 +2866,7 @@ d3.json("100KBCSV.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBCSV_cactus" width="900" height="600"></svg>
+<svg id="svg100KBCSV_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3428,7 +3099,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBCSV" width="900" height="600"></svg>
+<svg id="svg25MBCSV" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3572,54 +3243,8 @@ d3.json("25MBCSV.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -3644,7 +3269,7 @@ d3.json("25MBCSV.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBCSV_cactus" width="900" height="600"></svg>
+<svg id="svg25MBCSV_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3877,7 +3502,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBCSV" width="900" height="600"></svg>
+<svg id="svg100MBCSV" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4021,54 +3646,8 @@ d3.json("100MBCSV.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -4093,7 +3672,7 @@ d3.json("100MBCSV.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBCSV_cactus" width="900" height="600"></svg>
+<svg id="svg100MBCSV_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4366,7 +3945,7 @@ A sample of two months worth of all HTTP requests to the NASA Kennedy Space Cent
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBLogs" width="900" height="600"></svg>
+<svg id="svg100KBLogs" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4510,54 +4089,8 @@ d3.json("100KBLogs.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -4582,7 +4115,7 @@ d3.json("100KBLogs.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBLogs_cactus" width="900" height="600"></svg>
+<svg id="svg100KBLogs_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4815,7 +4348,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBLogs" width="900" height="600"></svg>
+<svg id="svg25MBLogs" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4959,54 +4492,8 @@ d3.json("25MBLogs.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -5031,7 +4518,7 @@ d3.json("25MBLogs.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBLogs_cactus" width="900" height="600"></svg>
+<svg id="svg25MBLogs_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5264,7 +4751,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBLogs" width="900" height="600"></svg>
+<svg id="svg100MBLogs" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5408,54 +4895,8 @@ d3.json("100MBLogs.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -5480,7 +4921,7 @@ d3.json("100MBLogs.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBLogs_cactus" width="900" height="600"></svg>
+<svg id="svg100MBLogs_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5757,7 +5198,7 @@ A file containing a single, randomly generated line belonging to the language "[
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBRandom" width="900" height="600"></svg>
+<svg id="svg100KBRandom" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5901,54 +5342,8 @@ d3.json("100KBRandom.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -5973,7 +5368,7 @@ d3.json("100KBRandom.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBRandom_cactus" width="900" height="600"></svg>
+<svg id="svg100KBRandom_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6206,7 +5601,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandom" width="900" height="600"></svg>
+<svg id="svg25MBRandom" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6350,54 +5745,8 @@ d3.json("25MBRandom.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -6422,7 +5771,7 @@ d3.json("25MBRandom.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBRandom_cactus" width="900" height="600"></svg>
+<svg id="svg25MBRandom_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6655,7 +6004,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBRandom" width="900" height="600"></svg>
+<svg id="svg100MBRandom" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6799,54 +6148,8 @@ d3.json("100MBRandom.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -6871,7 +6174,7 @@ d3.json("100MBRandom.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBRandom_cactus" width="900" height="600"></svg>
+<svg id="svg100MBRandom_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7145,7 +6448,7 @@ A file containing multiple lines or arbitrary length over the alphabet {0,1}. Ea
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBRandomL" width="900" height="600"></svg>
+<svg id="svg100KBRandomL" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7289,54 +6592,8 @@ d3.json("100KBRandomL.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -7361,7 +6618,7 @@ d3.json("100KBRandomL.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBRandomL_cactus" width="900" height="600"></svg>
+<svg id="svg100KBRandomL_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7594,7 +6851,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandomL" width="900" height="600"></svg>
+<svg id="svg25MBRandomL" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7738,54 +6995,8 @@ d3.json("25MBRandomL.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -7810,7 +7021,7 @@ d3.json("25MBRandomL.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBRandomL_cactus" width="900" height="600"></svg>
+<svg id="svg25MBRandomL_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8043,7 +7254,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBRandomL" width="900" height="600"></svg>
+<svg id="svg100MBRandomL" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8187,54 +7398,8 @@ d3.json("100MBRandomL.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -8259,7 +7424,7 @@ d3.json("100MBRandomL.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBRandomL_cactus" width="900" height="600"></svg>
+<svg id="svg100MBRandomL_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8527,7 +7692,7 @@ A file where each line is exactly "Pedro". As a reference, the 100 MB long file 
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBPedro" width="900" height="600"></svg>
+<svg id="svg100KBPedro" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8671,54 +7836,8 @@ d3.json("100KBPedro.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -8743,7 +7862,7 @@ d3.json("100KBPedro.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100KBPedro_cactus" width="900" height="600"></svg>
+<svg id="svg100KBPedro_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8976,7 +8095,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBPedro" width="900" height="600"></svg>
+<svg id="svg25MBPedro" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -9120,54 +8239,8 @@ d3.json("25MBPedro.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -9192,7 +8265,7 @@ d3.json("25MBPedro.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBPedro_cactus" width="900" height="600"></svg>
+<svg id="svg25MBPedro_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -9425,7 +8498,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBPedro" width="900" height="600"></svg>
+<svg id="svg100MBPedro" width="1200" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -9569,54 +8642,8 @@ d3.json("100MBPedro.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "8")
+      .style("stroke-width", "5")
       .style("stroke", "black");
-
-  // Draw the lines
-  // gzip
-  var sum = 0;
-  var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
-  }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // repair
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("repair"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
-
-  // zstd
-  sum = 0;
-  idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
-  }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
-  g.append("line")
-    .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
-    .attr("x1", 0)
-    .attr("y1", y(avg))
-    .attr("x2", width)
-    .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
       .data(d3.keys(data[0]).filter(function(key) {
@@ -9641,7 +8668,7 @@ d3.json("100MBPedro.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg100MBPedro_cactus" width="900" height="600"></svg>
+<svg id="svg100MBPedro_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
