@@ -192,6 +192,7 @@ File containing English subtitles extracted from the <a href="http://opus.nlpl.e
   document.getElementById("p5").style.color = color(5);
   document.getElementById("p6").style.color = color(6);
   document.getElementById("p7").style.color = color(7);
+  document.getElementById("p8").style.color = color(8);
 </script>
 <div class="graphs Subtitles">
 <h2><center> Graphs </center></h2>
@@ -200,7 +201,7 @@ File containing English subtitles extracted from the <a href="http://opus.nlpl.e
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBSubtitles" width="1200" height="600"></svg>
+<svg id="svg100KBSubtitles" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -603,7 +604,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBSubtitles" width="1200" height="600"></svg>
+<svg id="svg25MBSubtitles" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1006,7 +1007,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBSubtitles" width="1200" height="600"></svg>
+<svg id="svg100MBSubtitles" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1450,7 +1451,7 @@ A sample of the public timeline recorded by <a href="https://www.githubarchive.o
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBJSON" width="1200" height="600"></svg>
+<svg id="svg100KBJSON" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -1853,7 +1854,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBJSON" width="1200" height="600"></svg>
+<svg id="svg25MBJSON" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2256,7 +2257,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBJSON" width="1200" height="600"></svg>
+<svg id="svg100MBJSON" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -2696,7 +2697,7 @@ A sample of the <a href="http://storage.googleapis.com/books/ngrams/books/datase
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBCSV" width="1200" height="600"></svg>
+<svg id="svg100KBCSV" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3099,7 +3100,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBCSV" width="1200" height="600"></svg>
+<svg id="svg25MBCSV" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3502,7 +3503,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBCSV" width="1200" height="600"></svg>
+<svg id="svg100MBCSV" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -3945,7 +3946,7 @@ A sample of two months worth of all HTTP requests to the NASA Kennedy Space Cent
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBLogs" width="1200" height="600"></svg>
+<svg id="svg100KBLogs" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4348,7 +4349,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBLogs" width="1200" height="600"></svg>
+<svg id="svg25MBLogs" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -4751,7 +4752,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBLogs" width="1200" height="600"></svg>
+<svg id="svg100MBLogs" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5160,7 +5161,7 @@ mouseG.append('svg:rect')
 <div class="list Random">
 <h2><center> File </center></h2>
 <div class="description">
-A file containing a single, randomly generated line belonging to the language "[0,1]*2". As a reference, the 100 MB long file is compressed by repair, zstd and gzip to 18 MB, 14 MB and 16 MB, respectively.
+A file containing a single, randomly generated line belonging to the language "[0,1]*2". As a reference, the 100 MB long file is compressed by repair, zstd and gzip to 18 MB, 14 MB and 16 MB, respectively. Note that the following graphs use logarithmic scale for the Y axis due to the huge difference in performance exhibited by the considered tools.
 </div>
 <h2><center> Regular Expressions </center></h2>
 <ul>
@@ -5198,7 +5199,7 @@ A file containing a single, randomly generated line belonging to the language "[
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBRandom" width="1200" height="600"></svg>
+<svg id="svg100KBRandom" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5220,7 +5221,7 @@ g.append('text')
 var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
 var x1 = d3.scale.ordinal();
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -5281,7 +5282,7 @@ d3.json("100KBRandom.json", function(error, data) {
   })).rangeRoundBands([0, x.rangeBand()]);
   // Set the Y domain
   y.domain([
-    0,
+    1,
     d3.max(currencies, function(c) {
       return d3.max(c.values, function(v) {
         return v.worth;
@@ -5389,7 +5390,7 @@ g.append('text')
 // Set the X scale
 var x = d3.scale.linear().range([0, width]);
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -5601,7 +5602,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandom" width="1200" height="600"></svg>
+<svg id="svg25MBRandom" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -5623,7 +5624,7 @@ g.append('text')
 var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
 var x1 = d3.scale.ordinal();
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -5684,7 +5685,7 @@ d3.json("25MBRandom.json", function(error, data) {
   })).rangeRoundBands([0, x.rangeBand()]);
   // Set the Y domain
   y.domain([
-    0,
+    1,
     d3.max(currencies, function(c) {
       return d3.max(c.values, function(v) {
         return v.worth;
@@ -5792,7 +5793,7 @@ g.append('text')
 // Set the X scale
 var x = d3.scale.linear().range([0, width]);
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -6004,7 +6005,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBRandom" width="1200" height="600"></svg>
+<svg id="svg100MBRandom" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6026,7 +6027,7 @@ g.append('text')
 var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
 var x1 = d3.scale.ordinal();
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -6087,7 +6088,7 @@ d3.json("100MBRandom.json", function(error, data) {
   })).rangeRoundBands([0, x.rangeBand()]);
   // Set the Y domain
   y.domain([
-    0,
+    1,
     d3.max(currencies, function(c) {
       return d3.max(c.values, function(v) {
         return v.worth;
@@ -6195,7 +6196,7 @@ g.append('text')
 // Set the X scale
 var x = d3.scale.linear().range([0, width]);
 // Set the Y scale
-var y = d3.scale.linear().range([height, 0]);
+var y = d3.scale.log().range([height, 1]);
 
 var xAxis = d3.svg.axis()
 .scale(x)
@@ -6448,7 +6449,7 @@ A file containing multiple lines or arbitrary length over the alphabet {0,1}. Ea
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBRandomL" width="1200" height="600"></svg>
+<svg id="svg100KBRandomL" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -6851,7 +6852,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandomL" width="1200" height="600"></svg>
+<svg id="svg25MBRandomL" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7254,7 +7255,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBRandomL" width="1200" height="600"></svg>
+<svg id="svg100MBRandomL" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -7692,7 +7693,7 @@ A file where each line is exactly "Pedro". As a reference, the 100 MB long file 
 var color = d3.scale.category10();
 
 </script>
-<svg id="svg100KBPedro" width="1200" height="600"></svg>
+<svg id="svg100KBPedro" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8095,7 +8096,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBPedro" width="1200" height="600"></svg>
+<svg id="svg25MBPedro" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -8498,7 +8499,7 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg100MBPedro" width="1200" height="600"></svg>
+<svg id="svg100MBPedro" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
