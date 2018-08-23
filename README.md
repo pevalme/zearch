@@ -16,6 +16,11 @@ What is it?
 ## Compiling
 
 ### Installing libfa
+Instal the tools and libraries required to build **augeas** (besides the usual tools: gcc, autoconf, automake etc.)
+```
+sudo apt-get install bison, flex, readline-devel, libxml2-devel
+```
+
 Clone the [*augeas project*](https://github.com/hercules-team/augeas) repository.
 ```
 git clone git@github.com:hercules-team/augeas.git
@@ -25,6 +30,12 @@ From the root folder run
 ./autogen.sh
 make
 sudo make install
+```
+
+Finally, update the library path so that **zearch** can find **libfa**
+```
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+export LD_LIBRARY_PATH
 ```
 
 ### Compiling Zearch
