@@ -604,11 +604,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBSubtitles" width="1000" height="600"></svg>
+<svg id="svg1MBSubtitles" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBSubtitles"),
+var svg = d3.select("#svg1MBSubtitles"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -619,7 +619,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB Subtitles')
+  .text('Search in 1MB Subtitles')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -652,7 +652,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBSubtitles.json", function(error, data) {
+d3.json("1MBSubtitles.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -774,11 +774,11 @@ d3.json("25MBSubtitles.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBSubtitles_cactus" width="800" height="600"></svg>
+<svg id="svg1MBSubtitles_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBSubtitles_cactus"),
+var svg = d3.select("#svg1MBSubtitles_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -789,7 +789,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB Subtitles')
+  .text('Cactus diagram for searching in 1MB Subtitles')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -816,7 +816,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBSubtitles_cactus.json", function(error, data) {
+d3.json("1MBSubtitles_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -914,17 +914,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBSubtitles_cactus
-var info25MBSubtitles_cactus = svg.selectAll(".info25MBSubtitles_cactus")
+// Add the info1MBSubtitles_cactus
+var info1MBSubtitles_cactus = svg.selectAll(".info1MBSubtitles_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBSubtitles_cactus")
+      .attr("class", "info1MBSubtitles_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBSubtitles_cactus.append("text")
+  info1MBSubtitles_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -934,20 +934,20 @@ var info25MBSubtitles_cactus = svg.selectAll(".info25MBSubtitles_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBSubtitles_cactus");
+  .attr("class", "mouse-over-effects1MBSubtitles_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBSubtitles_cactus")
+  .attr("class", "mouse-line1MBSubtitles_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBSubtitles_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBSubtitles_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBSubtitles_cactus");
+  .attr("class", "mouse-per-line1MBSubtitles_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -956,27 +956,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBSubtitles_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBSubtitles_cactus")
+    d3.selectAll(".info1MBSubtitles_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBSubtitles_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBSubtitles_cactus circle")
+    d3.selectAll(".mouse-per-line1MBSubtitles_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBSubtitles_cactus text")
+    d3.selectAll(".mouse-per-line1MBSubtitles_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBSubtitles_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBSubtitles_cactus")
+    d3.selectAll(".info1MBSubtitles_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBSubtitles_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBSubtitles_cactus circle")
+    d3.selectAll(".mouse-per-line1MBSubtitles_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBSubtitles_cactus text")
+    d3.selectAll(".mouse-per-line1MBSubtitles_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBSubtitles_cactus")
+    d3.selectAll(".mouse-per-line1MBSubtitles_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -991,15 +991,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBSubtitles_cactus")
+        d3.select(".mouse-line1MBSubtitles_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBSubtitles_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBSubtitles_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBSubtitles_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBSubtitles_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -1854,11 +1854,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBJSON" width="1000" height="600"></svg>
+<svg id="svg1MBJSON" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBJSON"),
+var svg = d3.select("#svg1MBJSON"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -1869,7 +1869,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB JSON')
+  .text('Search in 1MB JSON')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -1902,7 +1902,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBJSON.json", function(error, data) {
+d3.json("1MBJSON.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -2024,11 +2024,11 @@ d3.json("25MBJSON.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBJSON_cactus" width="800" height="600"></svg>
+<svg id="svg1MBJSON_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBJSON_cactus"),
+var svg = d3.select("#svg1MBJSON_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -2039,7 +2039,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB JSON')
+  .text('Cactus diagram for searching in 1MB JSON')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -2066,7 +2066,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBJSON_cactus.json", function(error, data) {
+d3.json("1MBJSON_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -2164,17 +2164,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBJSON_cactus
-var info25MBJSON_cactus = svg.selectAll(".info25MBJSON_cactus")
+// Add the info1MBJSON_cactus
+var info1MBJSON_cactus = svg.selectAll(".info1MBJSON_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBJSON_cactus")
+      .attr("class", "info1MBJSON_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBJSON_cactus.append("text")
+  info1MBJSON_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -2184,20 +2184,20 @@ var info25MBJSON_cactus = svg.selectAll(".info25MBJSON_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBJSON_cactus");
+  .attr("class", "mouse-over-effects1MBJSON_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBJSON_cactus")
+  .attr("class", "mouse-line1MBJSON_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBJSON_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBJSON_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBJSON_cactus");
+  .attr("class", "mouse-per-line1MBJSON_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -2206,27 +2206,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBJSON_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBJSON_cactus")
+    d3.selectAll(".info1MBJSON_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBJSON_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBJSON_cactus circle")
+    d3.selectAll(".mouse-per-line1MBJSON_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBJSON_cactus text")
+    d3.selectAll(".mouse-per-line1MBJSON_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBJSON_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBJSON_cactus")
+    d3.selectAll(".info1MBJSON_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBJSON_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBJSON_cactus circle")
+    d3.selectAll(".mouse-per-line1MBJSON_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBJSON_cactus text")
+    d3.selectAll(".mouse-per-line1MBJSON_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBJSON_cactus")
+    d3.selectAll(".mouse-per-line1MBJSON_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -2241,15 +2241,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBJSON_cactus")
+        d3.select(".mouse-line1MBJSON_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBJSON_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBJSON_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBJSON_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBJSON_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -3100,11 +3100,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBCSV" width="1000" height="600"></svg>
+<svg id="svg1MBCSV" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBCSV"),
+var svg = d3.select("#svg1MBCSV"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -3115,7 +3115,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB CSV')
+  .text('Search in 1MB CSV')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -3148,7 +3148,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBCSV.json", function(error, data) {
+d3.json("1MBCSV.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -3270,11 +3270,11 @@ d3.json("25MBCSV.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBCSV_cactus" width="800" height="600"></svg>
+<svg id="svg1MBCSV_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBCSV_cactus"),
+var svg = d3.select("#svg1MBCSV_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -3285,7 +3285,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB CSV')
+  .text('Cactus diagram for searching in 1MB CSV')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -3312,7 +3312,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBCSV_cactus.json", function(error, data) {
+d3.json("1MBCSV_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -3410,17 +3410,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBCSV_cactus
-var info25MBCSV_cactus = svg.selectAll(".info25MBCSV_cactus")
+// Add the info1MBCSV_cactus
+var info1MBCSV_cactus = svg.selectAll(".info1MBCSV_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBCSV_cactus")
+      .attr("class", "info1MBCSV_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBCSV_cactus.append("text")
+  info1MBCSV_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -3430,20 +3430,20 @@ var info25MBCSV_cactus = svg.selectAll(".info25MBCSV_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBCSV_cactus");
+  .attr("class", "mouse-over-effects1MBCSV_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBCSV_cactus")
+  .attr("class", "mouse-line1MBCSV_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBCSV_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBCSV_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBCSV_cactus");
+  .attr("class", "mouse-per-line1MBCSV_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -3452,27 +3452,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBCSV_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBCSV_cactus")
+    d3.selectAll(".info1MBCSV_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBCSV_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBCSV_cactus circle")
+    d3.selectAll(".mouse-per-line1MBCSV_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBCSV_cactus text")
+    d3.selectAll(".mouse-per-line1MBCSV_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBCSV_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBCSV_cactus")
+    d3.selectAll(".info1MBCSV_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBCSV_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBCSV_cactus circle")
+    d3.selectAll(".mouse-per-line1MBCSV_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBCSV_cactus text")
+    d3.selectAll(".mouse-per-line1MBCSV_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBCSV_cactus")
+    d3.selectAll(".mouse-per-line1MBCSV_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -3487,15 +3487,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBCSV_cactus")
+        d3.select(".mouse-line1MBCSV_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBCSV_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBCSV_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBCSV_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBCSV_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -4349,11 +4349,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBLogs" width="1000" height="600"></svg>
+<svg id="svg1MBLogs" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBLogs"),
+var svg = d3.select("#svg1MBLogs"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -4364,7 +4364,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB Logs')
+  .text('Search in 1MB Logs')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -4397,7 +4397,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBLogs.json", function(error, data) {
+d3.json("1MBLogs.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -4519,11 +4519,11 @@ d3.json("25MBLogs.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBLogs_cactus" width="800" height="600"></svg>
+<svg id="svg1MBLogs_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBLogs_cactus"),
+var svg = d3.select("#svg1MBLogs_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -4534,7 +4534,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB Logs')
+  .text('Cactus diagram for searching in 1MB Logs')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -4561,7 +4561,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBLogs_cactus.json", function(error, data) {
+d3.json("1MBLogs_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -4659,17 +4659,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBLogs_cactus
-var info25MBLogs_cactus = svg.selectAll(".info25MBLogs_cactus")
+// Add the info1MBLogs_cactus
+var info1MBLogs_cactus = svg.selectAll(".info1MBLogs_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBLogs_cactus")
+      .attr("class", "info1MBLogs_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBLogs_cactus.append("text")
+  info1MBLogs_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -4679,20 +4679,20 @@ var info25MBLogs_cactus = svg.selectAll(".info25MBLogs_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBLogs_cactus");
+  .attr("class", "mouse-over-effects1MBLogs_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBLogs_cactus")
+  .attr("class", "mouse-line1MBLogs_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBLogs_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBLogs_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBLogs_cactus");
+  .attr("class", "mouse-per-line1MBLogs_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -4701,27 +4701,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBLogs_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBLogs_cactus")
+    d3.selectAll(".info1MBLogs_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBLogs_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBLogs_cactus circle")
+    d3.selectAll(".mouse-per-line1MBLogs_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBLogs_cactus text")
+    d3.selectAll(".mouse-per-line1MBLogs_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBLogs_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBLogs_cactus")
+    d3.selectAll(".info1MBLogs_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBLogs_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBLogs_cactus circle")
+    d3.selectAll(".mouse-per-line1MBLogs_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBLogs_cactus text")
+    d3.selectAll(".mouse-per-line1MBLogs_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBLogs_cactus")
+    d3.selectAll(".mouse-per-line1MBLogs_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -4736,15 +4736,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBLogs_cactus")
+        d3.select(".mouse-line1MBLogs_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBLogs_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBLogs_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBLogs_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBLogs_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -5602,11 +5602,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandom" width="1000" height="600"></svg>
+<svg id="svg1MBRandom" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBRandom"),
+var svg = d3.select("#svg1MBRandom"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -5617,7 +5617,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB Random')
+  .text('Search in 1MB Random')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -5650,7 +5650,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBRandom.json", function(error, data) {
+d3.json("1MBRandom.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -5772,11 +5772,11 @@ d3.json("25MBRandom.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBRandom_cactus" width="800" height="600"></svg>
+<svg id="svg1MBRandom_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBRandom_cactus"),
+var svg = d3.select("#svg1MBRandom_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -5787,7 +5787,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB Random')
+  .text('Cactus diagram for searching in 1MB Random')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -5814,7 +5814,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBRandom_cactus.json", function(error, data) {
+d3.json("1MBRandom_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -5912,17 +5912,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBRandom_cactus
-var info25MBRandom_cactus = svg.selectAll(".info25MBRandom_cactus")
+// Add the info1MBRandom_cactus
+var info1MBRandom_cactus = svg.selectAll(".info1MBRandom_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBRandom_cactus")
+      .attr("class", "info1MBRandom_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBRandom_cactus.append("text")
+  info1MBRandom_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -5932,20 +5932,20 @@ var info25MBRandom_cactus = svg.selectAll(".info25MBRandom_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBRandom_cactus");
+  .attr("class", "mouse-over-effects1MBRandom_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBRandom_cactus")
+  .attr("class", "mouse-line1MBRandom_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBRandom_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBRandom_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBRandom_cactus");
+  .attr("class", "mouse-per-line1MBRandom_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -5954,27 +5954,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBRandom_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBRandom_cactus")
+    d3.selectAll(".info1MBRandom_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBRandom_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBRandom_cactus circle")
+    d3.selectAll(".mouse-per-line1MBRandom_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBRandom_cactus text")
+    d3.selectAll(".mouse-per-line1MBRandom_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBRandom_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBRandom_cactus")
+    d3.selectAll(".info1MBRandom_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBRandom_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBRandom_cactus circle")
+    d3.selectAll(".mouse-per-line1MBRandom_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBRandom_cactus text")
+    d3.selectAll(".mouse-per-line1MBRandom_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBRandom_cactus")
+    d3.selectAll(".mouse-per-line1MBRandom_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -5989,15 +5989,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBRandom_cactus")
+        d3.select(".mouse-line1MBRandom_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBRandom_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBRandom_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBRandom_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBRandom_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -6852,11 +6852,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBRandomL" width="1000" height="600"></svg>
+<svg id="svg1MBRandomL" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBRandomL"),
+var svg = d3.select("#svg1MBRandomL"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -6867,7 +6867,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB RandomL')
+  .text('Search in 1MB RandomL')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -6900,7 +6900,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBRandomL.json", function(error, data) {
+d3.json("1MBRandomL.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -7022,11 +7022,11 @@ d3.json("25MBRandomL.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBRandomL_cactus" width="800" height="600"></svg>
+<svg id="svg1MBRandomL_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBRandomL_cactus"),
+var svg = d3.select("#svg1MBRandomL_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -7037,7 +7037,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB RandomL')
+  .text('Cactus diagram for searching in 1MB RandomL')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -7064,7 +7064,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBRandomL_cactus.json", function(error, data) {
+d3.json("1MBRandomL_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -7162,17 +7162,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBRandomL_cactus
-var info25MBRandomL_cactus = svg.selectAll(".info25MBRandomL_cactus")
+// Add the info1MBRandomL_cactus
+var info1MBRandomL_cactus = svg.selectAll(".info1MBRandomL_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBRandomL_cactus")
+      .attr("class", "info1MBRandomL_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBRandomL_cactus.append("text")
+  info1MBRandomL_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -7182,20 +7182,20 @@ var info25MBRandomL_cactus = svg.selectAll(".info25MBRandomL_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBRandomL_cactus");
+  .attr("class", "mouse-over-effects1MBRandomL_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBRandomL_cactus")
+  .attr("class", "mouse-line1MBRandomL_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBRandomL_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBRandomL_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBRandomL_cactus");
+  .attr("class", "mouse-per-line1MBRandomL_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -7204,27 +7204,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBRandomL_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBRandomL_cactus")
+    d3.selectAll(".info1MBRandomL_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBRandomL_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBRandomL_cactus circle")
+    d3.selectAll(".mouse-per-line1MBRandomL_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBRandomL_cactus text")
+    d3.selectAll(".mouse-per-line1MBRandomL_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBRandomL_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBRandomL_cactus")
+    d3.selectAll(".info1MBRandomL_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBRandomL_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBRandomL_cactus circle")
+    d3.selectAll(".mouse-per-line1MBRandomL_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBRandomL_cactus text")
+    d3.selectAll(".mouse-per-line1MBRandomL_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBRandomL_cactus")
+    d3.selectAll(".mouse-per-line1MBRandomL_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -7239,15 +7239,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBRandomL_cactus")
+        d3.select(".mouse-line1MBRandomL_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBRandomL_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBRandomL_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBRandomL_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBRandomL_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
@@ -8096,11 +8096,11 @@ mouseG.append('svg:rect')
 });
 })();
 </script>
-<svg id="svg25MBPedro" width="1000" height="600"></svg>
+<svg id="svg1MBPedro" width="1000" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBPedro"),
+var svg = d3.select("#svg1MBPedro"),
   margin = { top: 100, right: 100, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -8111,7 +8111,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Search in 25MB Pedro')
+  .text('Search in 1MB Pedro')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -8144,7 +8144,7 @@ svg.call(tip);
 
 var counter = 0;
   // load the data
-d3.json("25MBPedro.json", function(error, data) {
+d3.json("1MBPedro.json", function(error, data) {
   // Select the important columns
   color.domain(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG";
@@ -8266,11 +8266,11 @@ d3.json("25MBPedro.json", function(error, data) {
 });
 })();
 </script>
-<svg id="svg25MBPedro_cactus" width="800" height="600"></svg>
+<svg id="svg1MBPedro_cactus" width="800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
-var svg = d3.select("#svg25MBPedro_cactus"),
+var svg = d3.select("#svg1MBPedro_cactus"),
   margin = { top: 100, right: 200, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
@@ -8281,7 +8281,7 @@ g.append('text')
   .attr('y', 0 - (margin.top / 2))
   .attr('text-anchor', 'middle')
   .style('font-size', '20px')
-  .text('Cactus diagram for searching in 25MB Pedro')
+  .text('Cactus diagram for searching in 1MB Pedro')
   .style('font-style', "italic");
 
 // Set the X scale
@@ -8308,7 +8308,7 @@ var line = d3.svg.line()
 
 var counter = 0;
   // load the data
-d3.json("25MBPedro_cactus.json", function(error, data) {
+d3.json("1MBPedro_cactus.json", function(error, data) {
   var currencies = color.domain().map(function(name) {
     return {
       name: name,
@@ -8406,17 +8406,17 @@ var legend = svg.selectAll(".legend")
       .style("text-anchor", "end")
       .text(function(d) { return d; });
 
-// Add the info25MBPedro_cactus
-var info25MBPedro_cactus = svg.selectAll(".info25MBPedro_cactus")
+// Add the info1MBPedro_cactus
+var info1MBPedro_cactus = svg.selectAll(".info1MBPedro_cactus")
       .data(d3.keys(data[0]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "Ignore";
   }).slice())
       .enter().append("g")
-      .attr("class", "info25MBPedro_cactus")
+      .attr("class", "info1MBPedro_cactus")
       .style("opacity", 0)
       .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
 
-  info25MBPedro_cactus.append("text")
+  info1MBPedro_cactus.append("text")
       .attr("x", width)
       .attr("y", 9)
       .attr("dy", ".35em")
@@ -8426,20 +8426,20 @@ var info25MBPedro_cactus = svg.selectAll(".info25MBPedro_cactus")
 
 // Add the mouse line
 var mouseG = g.append("g")
-  .attr("class", "mouse-over-effects25MBPedro_cactus");
+  .attr("class", "mouse-over-effects1MBPedro_cactus");
 
 mouseG.append("path")
-  .attr("class", "mouse-line25MBPedro_cactus")
+  .attr("class", "mouse-line1MBPedro_cactus")
   .style("stroke", "black")
   .style("stroke-dasharray", ("5, 5"))
   .style("stroke-width", "2px")
   .style("opacity", "0");
 
-var mousePerLine = mouseG.selectAll('.mouse-per-line25MBPedro_cactus')
+var mousePerLine = mouseG.selectAll('.mouse-per-line1MBPedro_cactus')
   .data(currencies)
   .enter()
   .append("g")
-  .attr("class", "mouse-per-line25MBPedro_cactus");
+  .attr("class", "mouse-per-line1MBPedro_cactus");
 
 // Append a rect to catch mouse movements on canvas
 mouseG.append('svg:rect')
@@ -8448,27 +8448,27 @@ mouseG.append('svg:rect')
   .attr('fill', 'none')
   .attr('pointer-events', 'all')
   .on('mouseout', function () { // on mouse out hide line, circles and text
-    d3.selectAll(".info25MBPedro_cactus").style("opacity", "0")
-    d3.select(".mouse-line25MBPedro_cactus")
+    d3.selectAll(".info1MBPedro_cactus").style("opacity", "0")
+    d3.select(".mouse-line1MBPedro_cactus")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBPedro_cactus circle")
+    d3.selectAll(".mouse-per-line1MBPedro_cactus circle")
       .style("opacity", "0");
-    d3.selectAll(".mouse-per-line25MBPedro_cactus text")
+    d3.selectAll(".mouse-per-line1MBPedro_cactus text")
       .style("opacity", "0");
   })
   .on('mouseover', function () { // on mouse in show line, circles and text
-    d3.selectAll(".info25MBPedro_cactus").style("opacity", "1")
-    d3.select(".mouse-line25MBPedro_cactus")
+    d3.selectAll(".info1MBPedro_cactus").style("opacity", "1")
+    d3.select(".mouse-line1MBPedro_cactus")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBPedro_cactus circle")
+    d3.selectAll(".mouse-per-line1MBPedro_cactus circle")
       .style("opacity", "1");
-    d3.selectAll(".mouse-per-line25MBPedro_cactus text")
+    d3.selectAll(".mouse-per-line1MBPedro_cactus text")
       .style("opacity", "1");
   })
   .on('mousemove', function () { // mouse moving over canvas
     var mouse = d3.mouse(this);
 
-    d3.selectAll(".mouse-per-line25MBPedro_cactus")
+    d3.selectAll(".mouse-per-line1MBPedro_cactus")
       .attr("transform", function (d, i) {
 
         var xPos = mouse[0];
@@ -8483,15 +8483,15 @@ mouseG.append('svg:rect')
           d3.select(this).select('circle').style("opacity", 0);
         }
 
-        d3.select(".mouse-line25MBPedro_cactus")
+        d3.select(".mouse-line1MBPedro_cactus")
           .attr("d", function () {
             var data = "M" + x(d.values[idx].Regex) + "," + height;
             data += " " + x(d.values[idx].Regex) + "," + 0;
             return data;
           });
 
-        d3.selectAll(".info25MBPedro_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
-        d3.selectAll(".info25MBPedro_cactus")[0][i].childNodes[0].style.fill=color(d.name);
+        d3.selectAll(".info1MBPedro_cactus")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info1MBPedro_cactus")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";
       });
