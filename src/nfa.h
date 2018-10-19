@@ -3,7 +3,7 @@
 
 	This data structure is the core of ZEARCH and it is accessed from different modules, each one
 	performing a different action. We have made it public (types.h) to simplify the implementation
-	since modules "count" and "nfa" both access to it.
+	since modules "count" and "nfa" both handle it while being TODO
 
 	typedef struct {
 		unsigned char initial[NUM_PAIRS_INITIAL];
@@ -29,22 +29,6 @@
 
 	Author: Pedro Valero
 	Date: 12-17
-
-	LICENSE: -zearch- Regular Expression Search on Compressed Text.
-    Copyright (C) 2018 Pedro Valero & Pierre Ganty
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef NFA_H_
@@ -56,7 +40,6 @@
 /*
 	Description: Add a self-loop labeled with ".". Reads
 	everything but the \n character.
-
 	Arguments:
 		- st, state with the self-loop.
 	Return: Nothing.
@@ -67,7 +50,6 @@ void add_self_loop(int st);
 	Description: Add a new edge to the automaton. Lazy addition.
 	Actually, it modifies variable trule, rather than accessing to
 	automaton[rule].
-
 	Arguments:
 		- i, origin state of the edge.
 		- f, end state of the edge.
@@ -77,7 +59,6 @@ void add_edge(short i, short f);
 
 /*
 	Description: Add a new edge to the automaton, accessing to it directly.
-
 	Arguments:
 		- i, origin state of the edge.
 		- f, end state of the edge.
@@ -89,7 +70,6 @@ void add_edge_direct(short i, short f);
 /*
 	Description: Iterates over the list of edges labeled
 	by right.
-
 	Arguments:
 		- None
 	Return: Nothing.
@@ -116,7 +96,6 @@ if (tright.first_block != -1) { \
 /*
 	Description: Iterates over the list of edges labeled
 	by left.
-
 	Arguments:
 		- None
 	Return: Nothing.
@@ -151,7 +130,6 @@ if (tleft.first_block != -1) {\
 	Return: Nothing.
 */
 void add_rule();
-void add_rule_simd(); // Operates as add_rule but using SIMD instructions
 
 /*
 	Description: Updates the state of the search for a sequence
@@ -167,6 +145,7 @@ void add_rule_simd(); // Operates as add_rule but using SIMD instructions
 	Return: Nothing.
 */
 void add_rule_seq();
+void add_rule_seq_count();
 
 /*
 	Description: Free memory allocated by the automaton.

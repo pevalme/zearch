@@ -8,22 +8,6 @@
 
 	Author: Pedro Valero
 	Date: 12-17
-
-	LICENSE: -zearch- Regular Expression Search on Compressed Text.
-    Copyright (C) 2018 Pedro Valero & Pierre Ganty
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
@@ -35,13 +19,13 @@
 #include "types.h"
 
 void stack_init(STACK *s){
-	s->data = (long*) malloc(sizeof(long) * STACK_SIZE);
+	posix_memalign((void **)&s->data, 64, STACK_SIZE * sizeof(uint));
 	s->top = -1;
 	s->size = STACK_SIZE;
 }
 
-__attribute__((always_inline)) inline long stack_pop(STACK *s){
-	long ret;
+__attribute__((always_inline)) inline uint stack_pop(STACK *s){
+	uint ret;
 
 	if (s->top == -1) {
 		printf("EMPTY STACK\n");
@@ -51,10 +35,10 @@ __attribute__((always_inline)) inline long stack_pop(STACK *s){
 	return ret;
 }
 
-__attribute__((always_inline)) inline void stack_push(STACK *s, long n){
+__attribute__((always_inline)) inline void stack_push(STACK *s, uint n){
 	if (s->top == s->size - 1) {
 		s->size = s->size + STACK_SIZE;
-		s->data = (long*)realloc(s->data, sizeof(long) * s->size);
+		s->data = (uint*)realloc(s->data, sizeof(uint) * s->size);
 	}
 
 	s->data[++s->top] = n;

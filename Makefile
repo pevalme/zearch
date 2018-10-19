@@ -1,8 +1,9 @@
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
 
-CFLAGS= -O3 -march=native -flto
-LFLAGS= -lfa
+CFLAGS= -O3 -march=native -flto -mtune=native
+# CFLAGS = -flto -DNDEBUG -ggdb -fno-inline-functions
+LFLAGS = -L/usr/local/lib/ -lfa
 DEBUG = -DDEBUG
 STATS = -DSTATS
 PLOT = -DPLOT

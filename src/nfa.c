@@ -30,22 +30,6 @@
 
 	Author: Pedro Valero
 	Date: 12-17
-
-	LICENSE: -zearch- Regular Expression Search on Compressed Text.
-    Copyright (C) 2018 Pedro Valero & Pierre Ganty
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
@@ -58,7 +42,6 @@
 #include "memory.h"
 #include "types.h"
 #include "mmintrin.h"
-#include "simd.h"
 
 extern GRAMMAR_RULE *grammar;
 extern TRANSITION_FULL *automaton;
@@ -66,12 +49,11 @@ extern TRANSITION_SEQ *automaton_seq;
 extern int recently_added[MAX_REGEX_SIZE][MAX_REGEX_SIZE];
 extern int reached_states[MAX_REGEX_SIZE];
 extern int reached_states2[MAX_REGEX_SIZE];
-extern int list_dots[MAX_REGEX_SIZE];
-extern int dots[MAX_REGEX_SIZE];
-extern int final_states[MAX_REGEX_SIZE];
+extern short list_dots[MAX_REGEX_SIZE];
+extern short dots[MAX_REGEX_SIZE];
+extern short final_states[MAX_REGEX_SIZE];
 extern short num_edges[MAX_REGEX_SIZE];
 extern short edges[MAX_REGEX_SIZE][MAX_REGEX_SIZE]; // edges[q] is the list of states reachable from q
-extern SIMD_SYMBOL sleft, sright, srule;
 extern int *frequencies;
 extern int *rs;
 extern int *rs2;
@@ -100,6 +82,11 @@ extern long no_connection_counter;
 extern long qsskipped;
 extern long wasted_memory;
 extern long reinserted;
+extern long num_operations_gr;
+extern long num_operations_seq;
+
+extern uint num_e_l;
+extern uint num_e_r;
 
 extern AVERAGE avg;
 #endif
@@ -321,123 +308,6 @@ void add_edge_direct(short i, short f){
 	}
 }
 
-void add_rule_simd() {
-	short aux[VEC_SIZE] __attribute__ ((aligned (16)));
-	__m128i m_left, res;
-	PAIR pleft, pright;
-	int it, it2; // Iterators over the pairs grouped in a PAIR structure
-	int j, index;
-	unsigned short cmp;
-	char rpairs, lpairs;
-	char mid = 0, added = 0;
-
-	if (mode != 'c' && mode != 'b') {
-		grammar[rule].left_symbol=left;
-		grammar[rule].right_symbol=right;
-	}
-
-	tleft = automaton[left];
-	tright = automaton[right];
-	trule = tempty;
-
-	// Propagate
-	trule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
-
-	DEBUG_PRINT("1Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, trule.new_lines, left, tleft.new_lines, right, tright.new_lines);
-
-	if (tleft.is_there == 0 && tright.is_there == 0) {
-#ifdef STATS
-		skipped++;
-#endif
-		return;
-	}
-
-	if (tright.is_there == 0) {
-		// Propagate to X information about transitions labeled with A ending at a final state
-		if (tright.new_lines == 0) {
-			iterate_left (it, \
-				if (dots[tleft.final[it]]){ \
-					if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
-				}, \
-				if (dots[pleft.final[it]]){ \
-					if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
-				} \
-			)
-		} else {
-			iterate_left (it, \
-				if (dots[tleft.final[it]] && final_states[tleft.final[it]]){ \
-					if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
-				}, \
-				if (dots[pleft.final[it]] && final_states[pleft.final[it]]){ \
-					if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
-				} \
-			)
-		}
-
-		if (tright.match || tleft.match) prop_count();
-
-		return;
-
-	} else {
-		// Propagate to X information about transitions labeled with B starting from initial state
-		simd_reset(&sright);
-		iterate_right(it, \
-			simd_add(&sright,tright.initial[it],tright.final[it]); \
-			if (dots[tright.initial[it]] && (tleft.new_lines == 0 || tright.initial[it] == 0)){ \
-				if (recently_added[tright.initial[it]][tright.final[it]] != rule) add_edge(tright.initial[it],tright.final[it]); \
-			}, \
-			simd_add(&sright,pright.initial[it],pright.final[it]); \
-			if (dots[pright.initial[it]] && (pright.initial[it] == 0 || tleft.new_lines == 0)){ \
-				if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
-			} \
-		)
-
-		added = tright.match;
-
-		if (tleft.is_there) {
-			added |= tleft.match; \
-			iterate_left (it, \
-				if (dots[tleft.final[it]] && (final_states[tleft.final[it]] ||  tright.new_lines == 0)){ \
-					if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
-				} \
-				for (it2 = 0; it2 <= sright.last; it2++) { \
-					cmp = _mm_movemask_epi8(_mm_cmpeq_epi16(_mm_set1_epi16(tleft.final[it]), sright.transitions[it2].reg_origin)); \
-					j = __builtin_ctz(cmp); \
-					index = j/2 + sright.transitions[it2].top - VEC_SIZE;
-					while (cmp) { \
-						if (recently_added[tleft.initial[it]][sright.transitions[it2].destiny[index]] != rule) add_edge(tleft.initial[it],sright.transitions[it2].destiny[index]); \
-						mid |= tleft.initial[it] == 0 && final_states[sright.transitions[it2].destiny[index]] && !final_states[tleft.final[it]]; \
-						cmp = cmp >> j+2; \
-						j = __builtin_ctz(cmp); \
-						index += j/2 + 1;
-					} \
-				},\
-				if (dots[pleft.final[it]] && (final_states[pleft.final[it]] || tright.new_lines == 0)){ \
-					if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
-				} \
-				for (it2 = 0; it2 <= sright.last; it2++) { \
-					cmp = _mm_movemask_epi8(_mm_cmpeq_epi16(_mm_set1_epi16(pleft.final[it]), sright.transitions[it2].reg_origin)); \
-					j = __builtin_ctz(cmp); \
-					index = j/2 + sright.transitions[it2].top - VEC_SIZE;
-					while (cmp) { \
-						if (recently_added[pleft.initial[it]][sright.transitions[it2].destiny[index]] != rule) add_edge(pleft.initial[it],sright.transitions[it2].destiny[index]); \
-						mid |= pleft.initial[it] == 0 && final_states[sright.transitions[it2].destiny[index]] && !final_states[pleft.final[it]]; \
-						cmp = cmp >> j+2; \
-						j = __builtin_ctz(cmp); \
-						index += j/2 + 1;
-					} \
-				} \
-			)
-		}
-
-		if (mid) incr_count();
-		else if (added) prop_count();
-
-		return;
-	}
-}
-
-
 void add_rule(){
 	PAIR pleft, pright;
 	int it, it2; // Iterators over the pairs grouped in a PAIR structure
@@ -445,6 +315,11 @@ void add_rule(){
 	bool bad_luck; // When bad_luck is 1 it means the automaton is not deterministic and the improvement given by edges does not apply.
 	char rpairs, lpairs;
 	char mid = 0, added = 0;
+
+#ifdef STATS	
+	num_e_r=0;
+	num_e_l=0;
+#endif	
 
 	tleft = automaton[left];
 	tright = automaton[right];
@@ -469,8 +344,23 @@ void add_rule(){
 		return;
 	}
 
-	if (tleft.is_there == 0) {
+#ifdef STATS
+	num_e_l = 0;
+	num_e_r = 0;
+	if (tleft.is_there != 0) {
+		iterate_left(it, num_e_l++;, num_e_l++;)
+	}
+
+	if (tright.is_there != 0) {
+		iterate_right(it, num_e_r++;, num_e_r++;)
+	}
+#endif
+
+	if (tleft.is_there == 0 || (tright.left && tleft.new_lines == 0 && tright.is_there)) {
 		if (tright.right) return;
+#ifdef STATS
+		num_operations_gr += num_e_r;
+#endif
 		if (tleft.new_lines) {
 			iterate_right(it, \
 				if (tright.initial[it] == 0 && !final_states[tright.final[it]]){ \
@@ -497,7 +387,7 @@ void add_rule(){
 		return;
 	}
 
-	if (tright.is_there) {
+	if (tright.is_there && (tleft.right == 0 || tright.new_lines != 0)) {
 		memset(num_edges, 0, sizeof(short) * num_states);
 		if (tleft.new_lines) {
 			iterate_right(it, \
@@ -507,7 +397,7 @@ void add_rule(){
 				}, \
 				edges[pright.initial[it]][num_edges[pright.initial[it]]++] = pright.final[it]; \
 				if (pright.initial[it] == 0 && !final_states[pright.final[it]]){ \
-						if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
+					if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
 				} \
 			)
 		} else {
@@ -522,6 +412,11 @@ void add_rule(){
 				} \
 			)
 		}
+
+#ifdef STATS
+		num_operations_gr += num_e_r;
+		iterate_left(it, num_operations_gr += 1 + num_edges[tleft.final[it]];, num_operations_gr += 1 + num_edges[pleft.final[it]];)
+#endif
 		iterate_left(it, \
 			if (dots[tleft.final[it]] && (final_states[tleft.final[it]] || tright.new_lines == 0)){ \
 				if (tleft.initial[it] != 0 || !final_states[tleft.final[it]]) { \
@@ -529,7 +424,6 @@ void add_rule(){
 				} \
 			} \
 			for (i = 0; i < num_edges[tleft.final[it]]; i++) { \
-
 				if (tleft.initial[it] == 0 && final_states[edges[tleft.final[it]][i]]) { \
 					mid |= (tleft.final[it] && !final_states[tleft.final[it]]); \
 				} else {\
@@ -556,6 +450,9 @@ void add_rule(){
 	}
 	// There is no transition labeled with right
 	if (tleft.left) return;
+#ifdef STATS
+		num_operations_gr += num_e_l;
+#endif
 	if (tright.new_lines) {
 		iterate_left (it, \
 			if (final_states[tleft.final[it]] && tleft.initial[it] != 0){ \
@@ -598,11 +495,6 @@ void add_rule_seq(){
 		// Propagate
 		tsrule.new_lines = MIN(tsleft.new_lines + tright.new_lines, 2);
 
-		// Default values
-		trule.match = 0;
-		trule.left = 0;
-		trule.right = 0;
-
 		DEBUG_PRINT("2Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tsleft.new_lines, right, tright.new_lines);
 
 		if (tright.is_there) {
@@ -619,6 +511,9 @@ void add_rule_seq(){
 		}
 #ifdef STATS
 		if (tright.is_there == 0) qsskipped++;
+		else {
+			iterate_right(it, num_operations_seq++;, num_operations_seq++;)
+		}
 #endif
 
 		if (tright.new_lines == 0) {
@@ -647,6 +542,168 @@ void add_rule_seq(){
 		tsrule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
 
 		DEBUG_PRINT("3Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tleft.new_lines, right, tright.new_lines);
+
+#ifdef STATS
+	num_e_r = 0;
+	num_e_l = 0;
+	if (tleft.is_there != 0) {
+		iterate_left(it, num_e_l++;, num_e_l++;)
+	}
+
+	if (tright.is_there != 0) {
+		iterate_right(it, num_e_r++;, num_e_r++;)
+	}
+
+	num_operations_seq += num_e_l*num_e_r;
+#endif
+
+		rs = reached_states;
+		if (tleft.is_there) {
+			iterate_left(it, \
+				if (tleft.initial[it] == 0 || rs[tleft.initial[it]] == -1) { \
+					DEBUG_PRINT("Reachable %d\n", it);
+					rs[tleft.final[it]] = left; \
+					if (final_states[tleft.final[it]]) { \
+						added = 1; \
+						mid |= (tleft.final[it] && !final_states[tleft.final[it]]); \
+					}\
+				}, \
+				if (pleft.initial[it] == 0 || rs[pleft.initial[it]] == -1) { \
+					rs[pleft.final[it]] = left; \
+					if (final_states[pleft.final[it]]) { \
+						added = 1; \
+						mid |= (pleft.final[it] && !final_states[pleft.final[it]]); \
+					}\
+				} \
+			)
+		}
+
+		rs2 = reached_states2;
+
+		if (tright.is_there) {
+			iterate_right(it, \
+				if (tright.initial[it] == 0 || rs[tright.initial[it]] == left) { \
+					rs2[tright.final[it]] = rule; \
+					if (final_states[tright.final[it]]) { \
+						added = 1; \
+						mid |= (tright.initial[it] && !final_states[tright.initial[it]]); \
+					}\
+				}, \
+				if (pright.initial[it] == 0 || rs[pright.initial[it]] == left) { \
+					rs2[pright.final[it]] = rule; \
+					if (final_states[pright.final[it]]) { \
+						added = 1; \
+						mid |= (pright.initial[it] && !final_states[pright.initial[it]]); \
+					}\
+				} \
+			)
+		}
+
+		if (tright.new_lines == 0) {
+			for (it = 0; it < num_dots; it++){
+				if (rs[list_dots[it]] == left) rs2[list_dots[it]] = rule;
+			}
+		}
+
+		rs = reached_states2;
+		rs2 = reached_states;
+
+		rs[0] = rule;
+
+		if (mid) incr_count_seq_1(MIDDLE_STATE);
+		else if (tleft.match || tright.match || added) incr_count_seq_1(INITIAL_FINAL_STATE);
+		return;
+	}
+}
+
+void add_rule_seq_count(){
+	int *rsaux;
+	PAIR pleft, pright;
+	int it; // Iterators over the pairs grouped in a PAIR structure
+	char rpairs, lpairs;
+	char mid = 0, added = 0;
+
+	if (__builtin_expect(rule > num_rules,1)) {
+		tsleft = tsrule;
+		tright = automaton[right];
+		tsrule = tsempty;
+		seq_counter_new = 0;
+
+		// Propagate
+		tsrule.new_lines = MIN(tsleft.new_lines + tright.new_lines, 2);
+
+		DEBUG_PRINT("2Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tsleft.new_lines, right, tright.new_lines);
+
+		if (tright.is_there) {
+			if (tright.right && (tsleft.right || tright.left)) {
+				incr_count_seq();
+				rs2[final_state] = rule;
+				seq_counter = seq_counter_new;
+				rsaux = rs;
+				rs = rs2;
+				rs2 = rsaux;
+				rs[0] = rule;
+				return;
+			}
+
+			iterate_right(it, \
+				if (rs[tright.initial[it]] == left) { \
+					rs2[tright.final[it]] = rule; \
+					mid |= (final_states[tright.final[it]] && tright.initial[it] && !final_states[tright.initial[it]]); \
+				}, \
+				if (rs[pright.initial[it]] == left) { \
+					rs2[pright.final[it]] = rule; \
+					mid |= (final_states[pright.final[it]] && pright.initial[it] && !final_states[pright.initial[it]]); \
+				} \
+			)
+		}
+#ifdef STATS
+		if (tright.is_there == 0) qsskipped++;
+		else {
+			iterate_right(it, num_operations_seq++;, num_operations_seq++;)
+		}
+#endif
+
+		if (tright.new_lines == 0) {
+			for (it = 0; it < num_dots; it++){
+				if (rs[list_dots[it]] == left) rs2[list_dots[it]] = rule;
+			}
+		}
+
+		rsaux = rs;
+		rs = rs2;
+		rs2 = rsaux;
+
+		if (mid) incr_count_seq();
+		else if (tsleft.match || tright.match) prop_count_seq();
+
+		seq_counter = seq_counter_new;
+
+		rs[0] = rule;
+		return;
+	} else {
+		tleft = automaton[left];
+		tright = automaton[right];
+		tsrule = tsempty;
+
+		// Propagate
+		tsrule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
+
+		DEBUG_PRINT("3Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tleft.new_lines, right, tright.new_lines);
+
+#ifdef STATS
+	num_e_r = 0;
+	num_e_l = 0;
+	if (tleft.is_there != 0) {
+		iterate_left(it, num_e_l++;, num_e_l++;)
+	}
+
+	if (tright.is_there != 0) {
+		iterate_right(it, num_e_r++;, num_e_r++;)
+	}
+
+	num_operations_seq += num_e_l*num_e_r;
+#endif
 
 		rs = reached_states;
 		if (tleft.is_there) {
