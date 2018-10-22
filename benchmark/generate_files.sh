@@ -88,16 +88,16 @@ echo "  repair"
 echo "  compress"
 echo "Please, confirm all of them are available and variables at the beginning of this file and set properly for your setup."
 echo "Press any key to continue or ctrl+C to exit"
-read
+# read
 
 echo "Are you sure you want to download all files used for the experiments in \"Regular Expression Searching in Compressed Text\" by P. Ganty and P. Valero?"
 echo "This requires 12 GB of disk space"
-read ANSWER
+# read ANSWER
 
-if [[ $ANSWER != "y" ]];
-then
-	exit
-fi
+# if [[ $ANSWER != "y" ]];
+# then
+# 	exit
+# fi
 
 echo -e "$BLUE============== Preparing Log files ==============$NC"
 
@@ -136,8 +136,8 @@ mkdir -p subs
 cd subs
 
 wget -q http://opus.nlpl.eu/download.php?f=OpenSubtitles2016/mono/OpenSubtitles2016.en.gz
-zcat OpenSubtitles2016.en.gz > subs.txt
-rm OpenSubtitles2016.en.gz
+zcat download.php\?f\=OpenSubtitles2016%2Fmono%2FOpenSubtitles2016.en.gz > subs.txt
+rm download.php\?f\=OpenSubtitles2016%2Fmono%2FOpenSubtitles2016.en.gz
 
 echo "Data downloaded!!"
 
@@ -158,23 +158,29 @@ echo -e "$BLUE============== Preparing Books files ==============$NC"
 mkdir -p gutenberg
 cd gutenberg
 
-echo "Installing some python libraries to download from google drive"
-git clone https://github.com/chentinghao/download_google_drive.git
-pip install requests
-pip install tqdm
+echo "Checkinf for some python libraries to download from google drive"
+REQ=$(pip list 2> /dev/null | grep -c "requests")
+if [[ $REQ -eq 0 ]]
+then
+	echo "Python library requests required"
+	pip install --user requests
+fi
+echo "done"
+echo "Downloading books from Gutenberg Dataset..."
 echo "This may take a while..."
-python download_google_drive/download_gdrive.py 0B2Mzhc7popBga2RkcWZNcjlRTGM gutenberg.zip
-rm -r download_google_drive
+./download_gdrive.py 0B2Mzhc7popBga2RkcWZNcjlRTGM gutenberg.zip
 unzip -u gutenberg.zip
-cd gutenberg/txt
+cd Gutenberg/txt
 ../../../extract_books.sh
 mv gutenberg.txt ../../
-
+cd ../../
 
 echo "Data downloaded!!"
 
-iconv --to-code US-ASCII -c gutenberg.txt > original.txt 
+iconv --to-code US-ASCII -c gutenberg.txt > tmp.txt 
 rm gutenberg.txt
+tr -d '\r' < tmp.txt > original.txt
+rm tmp.txt
 
 echo "Generating files of different sizes and compressing them"
 split_and_compress
@@ -184,6 +190,8 @@ echo "DONE"
 echo ""
 echo "==================================================="
 echo ""
+
+exit
 
 echo "Do you want to download all files used for the experiments? (even those not included in the paper) [y/n]"
 read ALL_FILES

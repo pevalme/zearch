@@ -10,22 +10,16 @@ RG="../../ripgrep-0.10.0-x86_64-unknown-linux-musl/rg"
 REPAIR="../../repair110811/repair"
 DESPAIR="../../repair110811/despair"
 GREP="../../grep-3.1/src/grep"
-PCREGREP="../../pcre2-10.32/pcre2grep"
 ZEARCH="../zearch"
 HYPERSCAN="./hyperscan"
 LZ4="../../lz4/lz4"
 ZSTD="../../zstd/zstd"
 NAVARRO="../../code/search"
-LZGREP="../../lzgrep/lzgrep"
 LZW="../../code/compress"
 GZIP="../../gzip-1.9/gzip"
 COUNTER=0
 TOCACTUS="./cactus-plot.py"
 STATS="stats.txt"
-# TIMEOUTRATIO=50
-STATS_COUNTER=0
-
-INDEX="index.html"
 
 TMP="tmp.txt"
 STATS_SCRIPT="./statistics.py"
@@ -68,6 +62,9 @@ run_simple_case() {
 
 	MATCHESH=$(LC_ALL=C $TIMEOUT $HYPERSCAN "$1" $6 2>/dev/null)
 	if [[ $? == 124 ]]; then HTO=1; MATCHESH=0; fi
+
+	MATCHESN=$(LC_ALL=C $TIMEOUT $NAVARRO "$4" $6.Z 2>/dev/null)
+	if [[ $? == 124 ]]; then NTO=1; MATCHESN=0; fi
 
 	# ZEARCH
 	rm $TMP
@@ -233,39 +230,11 @@ run_simple_case() {
 		echo "\"navarro\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	fi
 
-	# # LZGREP
-	# if [ $7 -le 1 ]; then
-	# 	if [[ $LZTO == 1 ]]; then
-	# 		rm $TMP
-	# 		for i in `seq 1 $REPS`; do
-	# 			echo 20000 >> $TMP
-	# 			echo 20000 >> lzgrep.txt
-	# 		done
-	# 		echo "\"lzgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	# 	else
-	# 		LC_ALL=C $LZGREP $FLAG -c "$5" $6.Z
-	# 		rm $TMP
-	# 		LC_ALL=C $LZGREP $FLAG -c "$5" $6.Z
-	# 		LC_ALL=C $LZGREP $FLAG -c "$5" $6.Z
-	# 		LC_ALL=C $LZGREP $FLAG -c "$5" $6.Z
-	# 		for i in `seq 1 $REPS`; do
-	# 			BEGIN=$(date +%s%3N)
-	# 			LC_ALL=C $LZGREP $FLAG -c "$5" $6.Z
-	# 			END=$(date +%s%3N)
-	# 			echo $((END-BEGIN)) >> $TMP
-	# 			echo $((END-BEGIN)) >> lzgrep.txt
-	# 		done
-	# 		echo "\"lzgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	# 	fi
-	# fi
-
 	echo "\"MatchesZ\": $MATCHESZ," >> $JSON
 	echo "\"MatchesGG\": $MATCHESGG," >> $JSON
-	# echo "\"MatchesP\": $MATCHESP," >> $JSON
 	echo "\"MatchesR\": $MATCHESR," >> $JSON
 	echo "\"MatchesH\": $MATCHESH," >> $JSON
-	echo "\"MatchesN\": $MATCHESN," >> $JSON
-	echo "\"MatchesL\": $MATCHESL" >> $JSON
+	echo "\"MatchesN\": $MATCHESN" >> $JSON
 }
 
 iterate_sizes() {
@@ -422,20 +391,8 @@ iterate_sizes() {
 		echo "\"hyperscan\": "`$STATS_SCRIPT hyperscan.txt`"," >> $JSON
 		echo "\"zearch\": "`$STATS_SCRIPT gsearch.txt`"," >> $JSON
 		echo "\"zgrep_lz4\": "`$STATS_SCRIPT zgrep_lz4.txt`"," >> $JSON
-		# echo "\"zhs_lz4_p\": "`$STATS_SCRIPT zhs_lz4_p.txt`"," >> $JSON
-		# echo "\"pcregrep\": "`$STATS_SCRIPT pcregrep.txt`"," >> $JSON
-		# echo "\"zpc_lz4_p\": "`$STATS_SCRIPT zpc_lz4_p.txt`"," >> $JSON
-		# echo "\"zrg_lz4\": "`$STATS_SCRIPT zrg_lz4.txt`"," >> $JSON
-		# echo "\"zrg_zstd\": "`$STATS_SCRIPT zrg_zstd.txt`"," >> $JSON
-		# echo "\"zgrep_zstd\": "`$STATS_SCRIPT zgrep_zstd.txt`"," >> $JSON
-		# echo "\"zgrep_gzip\": "`$STATS_SCRIPT zgrep_gzip.txt`"," >> $JSON
-		# echo "\"zrg_lz4_p\": "`$STATS_SCRIPT zrg_lz4_p.txt`"," >> $JSON
 		echo "\"zgrep_lz4_p\": "`$STATS_SCRIPT zgrep_lz4_p.txt`"," >> $JSON
-		# echo "\"zrg_zstd_p\": "`$STATS_SCRIPT zrg_zstd_p.txt`"," >> $JSON
-		# echo "\"zgrep_zstd_p\": "`$STATS_SCRIPT zgrep_zstd_p.txt`"," >> $JSON
-		# echo "\"zgrep_gzip_p\": "`$STATS_SCRIPT zgrep_gzip_p.txt`"," >> $JSON
 		echo "\"GNgrep\": "`$STATS_SCRIPT navarro.txt` >> $JSON
-		# echo "\"LZgrep\": "`$STATS_SCRIPT lzgrep.txt` >> $JSON
 		echo "}" >> $JSON
 		echo "]" >> $JSON
 
@@ -445,13 +402,8 @@ iterate_sizes() {
 
 #############################
 ##
-##	SUBTITLES
+##	TESTS
 ##
-# regname=("Hello" "," "my" "name" "is" "Pedro")
-# rerp=("Hello" "," "my" "name" "is" "Pedro")
-# regsearch=("Hello" "," "my" "name" "is" "Pedro")
-# regrep=("Hello" "," "my" "name" "is" "Pedro")
-# ren=("Hello" "," "my" "name" "is" "Pedro")
 
 rerp=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
 regsearch=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
