@@ -45,20 +45,15 @@ run_simple_case() {
 	LZTO=0
 	NTO=0
 	HTO=0
-	PCTO=0
 
 	BEGIN=$(date +%s%3N)
-	for i in `seq 1 $REPS`; do $ZEARCH -c "$1" $6.rp 2>&1 1>/dev/null; done
+	for i in `seq 1 $REPS`; do $ZEARCH -c "$2" $6.rp 2>&1 1>/dev/null; done
 	END=$(date +%s%3N)
-
-	MATCHESR=$(LC_ALL=C $TIMEOUT $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6 2>/dev/null)
-	if [[ $? == 124 ]]; then RGTO=1; MATCHESR=0; fi
-	if [ -z "$MATCHESR" ]; then MATCHESR=0; fi
 
 	MATCHESGG=$(LC_ALL=C $TIMEOUT $GREP -c "$3" $6 2>/dev/null)
 	if [[ $? == 124 ]]; then GTO=1; MATCHESGG=0; fi
 
-	MATCHESZ=$($ZEARCH -c "$1" $6.rp 2>/dev/null)
+	MATCHESZ=$($ZEARCH -c "$2" $6.rp 2>/dev/null)
 
 	MATCHESH=$(LC_ALL=C $TIMEOUT $HYPERSCAN "$1" $6 2>/dev/null)
 	if [[ $? == 124 ]]; then HTO=1; MATCHESH=0; fi
@@ -128,54 +123,32 @@ run_simple_case() {
 		done
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# rm $TMP
+		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# for i in `seq 1 $REPS`; do
+		# 	BEGIN=$(date +%s%3N)
+		# 	LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		# 	END=$(date +%s%3N)
+		# 	echo $((END-BEGIN)) >> $TMP
+		# 	echo $((END-BEGIN)) >> zgrep_lz4.txt
+		# done
+		# echo "\"zgrep_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		rm $TMP
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
+		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
+		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		for i in `seq 1 $REPS`; do
 			BEGIN=$(date +%s%3N)
-			LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
+			LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 			END=$(date +%s%3N)
 			echo $((END-BEGIN)) >> $TMP
-			echo $((END-BEGIN)) >> zgrep_lz4.txt
+			echo $((END-BEGIN)) >> zgrep_zstd_p.txt
 		done
-		echo "\"zgrep_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	fi
-
-	# RIPGREP
-
-	if [[ $RGTO == 1 ]]; then
-		rm $TMP
-		for i in `seq 1 $REPS`; do
-			echo 20000 >> $TMP
-			echo 20000 >> zrg_zstd.txt
-			echo 20000 >> ripgrep.txt
-			echo 20000 >> zrg_lz4.txt
-			echo 20000 >> zrg_lz4_p.txt
-			echo 20000 >> zrg_zstd_p.txt
-		done
-		echo "\"zrg_zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"zrg_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"zrg_gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"zrg_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"zrg_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"zrg_gzip_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-		echo "\"ripgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	else
-		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-		rm $TMP
-		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-		for i in `seq 1 $REPS`; do
-			BEGIN=$(date +%s%3N)
-			LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-			END=$(date +%s%3N)
-			echo $((END-BEGIN)) >> $TMP
-			echo $((END-BEGIN)) >> ripgrep.txt
-		done
-		echo "\"ripgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+		echo "\"zgrep_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	fi
 
 	# HYPERSCAN
@@ -232,7 +205,6 @@ run_simple_case() {
 
 	echo "\"MatchesZ\": $MATCHESZ," >> $JSON
 	echo "\"MatchesGG\": $MATCHESGG," >> $JSON
-	echo "\"MatchesR\": $MATCHESR," >> $JSON
 	echo "\"MatchesH\": $MATCHESH," >> $JSON
 	echo "\"MatchesN\": $MATCHESN" >> $JSON
 }
@@ -251,13 +223,13 @@ iterate_sizes() {
 		echo "[" > $JSON
 		echo "{" >> $JSON
 		rm -f gsearch.txt zgrep_lz4.txt zrg_lz4.txt zgrep_zstd.txt zrg_zstd.txt zgrep_gzip.txt zrg_gzip.txt navarro.txt lzgrep.txt grep.txt ripgrep.txt zrg_lz4_p.txt zgrep_lz4_p.txt zrg_zstd_p.txt zgrep_zstd_p.txt zgrep_gzip_p.txt zrg_gzip_p.txt zhs_lz4_p.txt hyperscan.txt zpc_lz4_p.txt pcregrep.txt
-		run_simple_case "${rerp[0]}" "${regsearch[0]}" "${regrep[0]}" "${ren[0]}" "${relz[0]}" $FILE$SIZE".txt" 0
+		run_simple_case "${reh[0]}" "${regsearch[0]}" "${regrep[0]}" "${ren[0]}" "${relz[0]}" $FILE$SIZE".txt" 0
 
-		for i in `seq 1 $((${#rerp[@]}-1))`
+		for i in `seq 1 $((${#reh[@]}-1))`
 		do
 			echo "}," >> $JSON
 			echo "{" >> $JSON
-			run_simple_case "${rerp[$i]}" "${regsearch[$i]}" "${regrep[$i]}" "${ren[$i]}" "${relz[$i]}" $FILE$SIZE".txt" $i
+			run_simple_case "${reh[$i]}" "${regsearch[$i]}" "${regrep[$i]}" "${ren[$i]}" "${relz[$i]}" $FILE$SIZE".txt" $i
 		done
 
 		echo "}," >> $JSON
@@ -386,11 +358,11 @@ iterate_sizes() {
 		done
 		echo "\"repair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		echo "\"ripgrep\": "`$STATS_SCRIPT ripgrep.txt`"," >> $JSON
+		# echo "\"ripgrep\": "`$STATS_SCRIPT ripgrep.txt`"," >> $JSON
 		echo "\"grep\": "`$STATS_SCRIPT grep.txt`"," >> $JSON
 		echo "\"hyperscan\": "`$STATS_SCRIPT hyperscan.txt`"," >> $JSON
 		echo "\"zearch\": "`$STATS_SCRIPT gsearch.txt`"," >> $JSON
-		echo "\"zgrep_lz4\": "`$STATS_SCRIPT zgrep_lz4.txt`"," >> $JSON
+		echo "\"zgrep_zstd_p\": "`$STATS_SCRIPT zgrep_zstd_p.txt`"," >> $JSON
 		echo "\"zgrep_lz4_p\": "`$STATS_SCRIPT zgrep_lz4_p.txt`"," >> $JSON
 		echo "\"GNgrep\": "`$STATS_SCRIPT navarro.txt` >> $JSON
 		echo "}" >> $JSON
@@ -405,12 +377,12 @@ iterate_sizes() {
 ##	TESTS
 ##
 
-rerp=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
+reh=("what.*$" "HTTP.*$" "..*$" "I .* you.*$" " [a-z]{4} .*$" "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}.*$" " [a-z]*[a-z]{3} .*$" "[0-9]{4}.*$")
 regsearch=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
 regrep=("what" "HTTP" "." "I .* you" " [a-z]\{4\} " "[0-9]\{2\}/\(\(Jun\)\|\(Jul\)\|\(Aug\)\)/[0-9]\{4\}" " [a-z]*[a-z]\{3\} " "[0-9]\{4\}")
-ren=("what" "HTTP" "." "I .* you" " [a-z][a-z][a-z][a-z] " "[0-9][0-9]/((Jun)|(Jul)|(Aug))/[0-9][0-9][0-9][0-9]" " [a-z]*[a-z][a-z][a-z] " "[0-9][0-9][0-9][0-9]")
+ren=("what[^\n]*\n" "HTTP[^\n]*\n" "[^\n][^\n]*\n" "I [^\n]* you[^\n]*\n" " [a-z][a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9]/((Jun)|(Jul)|(Aug))/[0-9][0-9][0-9][0-9][^\n]*\n" " [a-z]*[a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9][0-9][0-9][^\n]*\n")
 relz=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
 
-iterate_sizes ../benchmark/gutenberg/original gutenberg 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 iterate_sizes ../benchmark/subs/original Subtitles 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 iterate_sizes ../benchmark/logs/original Logs 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
