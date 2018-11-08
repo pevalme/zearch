@@ -60,7 +60,7 @@ We have compared the performance of **zearch** with the state of the art approac
 Due to the limited functionality of our tool, the comparison only considers the running time required by these tools to report the number of lines in the original file containing a match.
 For the experiments the state of the art is represented by the following command
 ```
-zstd -dc compressed_file.Z | {grep,rg} -c regex
+{lz4,zstd} -dc compressed_file | {grep,rg,hyperscan} -c regex
 ```
-The experiments show that our tool outperforms the state of the art, even when decompression and search are done in parallel.
+The experiments show that our tool outperforms the state of the art, even though decompression and search are done in parallel.
 The detailed results of this comparison are available [here](https://pevalme.github.io/zearch/graphs/index.html)
