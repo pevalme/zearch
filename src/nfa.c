@@ -389,6 +389,9 @@ void add_rule(){
 
 	if (tright.is_there && (tleft.right == 0 || tright.new_lines != 0)) {
 		memset(num_edges, 0, sizeof(short) * num_states);
+		#ifdef STATS
+		num_operations_gr += num_states;
+		#endif
 		if (tleft.new_lines) {
 			iterate_right(it, \
 				edges[tright.initial[it]][num_edges[tright.initial[it]]++] = tright.final[it]; \
