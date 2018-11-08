@@ -12,12 +12,12 @@ if len(sys.argv) != 3:
 with open(sys.argv[1]) as data_file:
 	json_data = json.load(data_file,object_pairs_hook=OrderedDict)
 
-print json_data
+# print json_data
 sorted_lists = dict()
 first = True
 sorted_keys = []
 
-ignore=["Regex", "MatchesZ", "MatchesR", "MatchesGG", "MatchesH", "MatchesN", "MatchesL", "zstd_s","lz4_s","lzw_s","repair_s","gzip_s","zstd","lz4","LZW","gzip"]
+ignore=["Regex", "MatchesZ", "MatchesR", "MatchesGG", "MatchesH", "MatchesN", "MatchesL", "zstd_s","lz4_s","lzw_s","repair_s","gzip_s","zstd","lz4","LZW","gzip", "repair"]
 
 for run in json_data:
 	if run["Regex"] == "All":
@@ -54,12 +54,13 @@ for k in sorted_keys:
 # print "conversion"
 maximum = max([len(sorted_lists[x]) for x in sorted_lists])
 
+tools = ["zearch","grep","ripgrep","hyperscan","zhs_lz4_p","zhs_zstd_p","zgrep_lz4_p","zgrep_zstd_p","zrg_lz4_p","zrg_zstd_p"]
 with open(sys.argv[2], 'w') as data_file:
 	data_file.write("[")
 	for i in range(maximum):
 		data_file.write("{")
 		data_file.write("\"Regex\": "+str(i+1)+",")
-		for k in sorted_keys:
+		for k in tools:
 			if i < len(sorted_lists[k]):
 				data_file.write("\""+k+"\": " + str(sorted_lists[k][i]) + ",")
 

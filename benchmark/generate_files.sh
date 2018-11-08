@@ -11,6 +11,7 @@ ZSTD="zstd"
 LZ4="../../../lz4/lz4"
 COMPRESS="../../../code/compress"
 REPAIR="../../../repair110811/repair"
+GZIP="../../../gzip-1.9/gzip"
 
 # Variables for the script. Modify them on your own responsibility
 BLUE="\033[0;34m"
@@ -45,6 +46,15 @@ split_and_compress() {
 	$LZ4 -f -9 -k -m original10MB.txt
 	$LZ4 -f -9 -k -m original5MB.txt
 	$LZ4 -f -9 -k -m original1MB.txt
+
+	$GZIP -f -9 -k -m original500MB.txt
+	$GZIP -f -9 -k -m original250MB.txt
+	$GZIP -f -9 -k -m original100MB.txt
+	$GZIP -f -9 -k -m original50MB.txt
+	$GZIP -f -9 -k -m original25MB.txt
+	$GZIP -f -9 -k -m original10MB.txt
+	$GZIP -f -9 -k -m original5MB.txt
+	$GZIP -f -9 -k -m original1MB.txt
 
 	cp original500MB.txt a.txt
 	$COMPRESS a.txt
@@ -92,12 +102,12 @@ echo "Press any key to continue or ctrl+C to exit"
 
 echo "Are you sure you want to download all files used for the experiments in \"Regular Expression Searching in Compressed Text\" by P. Ganty and P. Valero?"
 echo "This requires 12 GB of disk space"
-# read ANSWER
+read ANSWER
 
-# if [[ $ANSWER != "y" ]];
-# then
-# 	exit
-# fi
+if [[ $ANSWER != "y" ]];
+then
+	exit
+fi
 
 echo -e "$BLUE============== Preparing Log files ==============$NC"
 
@@ -206,8 +216,10 @@ echo -e "$BLUE============== Preparing JSON files ==============$NC"
 mkdir -p json
 cd json
 
-wget -q http://data.gharchive.org/2015-01-01-{0..23}.json.gz
-zcat 2015-01-01{0..23}.json.gz > json.txt
+wget -q http://data.gharchive.org/2015-01-01-{0..25}.json.gz
+wget -q http://data.gharchive.org/2015-01-02-{0..15}.json.gz
+zcat 2015-01-0*.json.gz > json.txt
+rm 2015-01-0*.json.gz
 
 echo "Data downloaded!!"
 
@@ -234,8 +246,9 @@ wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gr
 wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-ye.gz
 
 zcat googlebooks-eng-all-2gram-20120701-{go,ww,ab,zz,ye}.gz > tmp.txt
+rm googlebooks-eng-all-2gram-20120701-{go,ww,ab,zz,ye}.gz
 shuf tmp.txt > csv.txt
-rm shuf
+rm tmp.txt
 echo "Data downloaded!!"
 
 iconv --to-code US-ASCII -c csv.txt > original.txt 
@@ -252,7 +265,6 @@ echo ""
 echo -e "$BLUE============== Preparing querty files ==============$NC"
 mkdir -p yes
 cd yes
-cd ..
 
 timeout 2 yes "qwerty" > yes.txt
 
@@ -272,7 +284,6 @@ echo ""
 echo -e "$BLUE============== Preparing Random files ==============$NC"
 mkdir -p random01
 cd random01
-cd ..
 
 cat /dev/urandom | tr -dc "01" | dd bs=1048576 count=500 2>/dev/null > random.txt
 

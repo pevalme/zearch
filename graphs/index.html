@@ -455,7 +455,6 @@ d3.json("1MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg1MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -471,6 +470,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg1MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -624,7 +624,7 @@ var info1MBSubtitles_cactus = svg.selectAll(".info1MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -951,7 +951,6 @@ d3.json("5MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg5MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -967,6 +966,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg5MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -1120,7 +1120,7 @@ var info5MBSubtitles_cactus = svg.selectAll(".info5MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -1447,7 +1447,6 @@ d3.json("10MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg10MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -1463,6 +1462,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg10MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -1616,7 +1616,7 @@ var info10MBSubtitles_cactus = svg.selectAll(".info10MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -1943,7 +1943,6 @@ d3.json("25MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg25MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -1959,6 +1958,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg25MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -2112,7 +2112,7 @@ var info25MBSubtitles_cactus = svg.selectAll(".info25MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -2439,7 +2439,6 @@ d3.json("50MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg50MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -2455,6 +2454,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg50MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -2608,7 +2608,7 @@ var info50MBSubtitles_cactus = svg.selectAll(".info50MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -2935,7 +2935,6 @@ d3.json("100MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg100MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -2951,6 +2950,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg100MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -3104,7 +3104,7 @@ var info100MBSubtitles_cactus = svg.selectAll(".info100MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -3431,7 +3431,6 @@ d3.json("250MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg250MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -3447,6 +3446,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg250MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -3600,7 +3600,7 @@ var info250MBSubtitles_cactus = svg.selectAll(".info250MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -3927,7 +3927,6 @@ d3.json("500MBSubtitles.json", function(error, data) {
 </script>
 <svg id="svg500MBSubtitles_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -3943,6 +3942,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg500MBSubtitles_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -4096,7 +4096,7 @@ var info500MBSubtitles_cactus = svg.selectAll(".info500MBSubtitles_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -4470,7 +4470,6 @@ d3.json("1MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg1MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -4486,6 +4485,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg1MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -4639,7 +4639,7 @@ var info1MBGutenberg_cactus = svg.selectAll(".info1MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -4966,7 +4966,6 @@ d3.json("5MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg5MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -4982,6 +4981,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg5MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -5135,7 +5135,7 @@ var info5MBGutenberg_cactus = svg.selectAll(".info5MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -5462,7 +5462,6 @@ d3.json("10MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg10MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -5478,6 +5477,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg10MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -5631,7 +5631,7 @@ var info10MBGutenberg_cactus = svg.selectAll(".info10MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -5958,7 +5958,6 @@ d3.json("25MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg25MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -5974,6 +5973,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg25MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -6127,7 +6127,7 @@ var info25MBGutenberg_cactus = svg.selectAll(".info25MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -6454,7 +6454,6 @@ d3.json("50MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg50MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -6470,6 +6469,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg50MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -6623,7 +6623,7 @@ var info50MBGutenberg_cactus = svg.selectAll(".info50MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -6950,7 +6950,6 @@ d3.json("100MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg100MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -6966,6 +6965,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg100MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -7119,7 +7119,7 @@ var info100MBGutenberg_cactus = svg.selectAll(".info100MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -7446,7 +7446,6 @@ d3.json("250MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg250MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -7462,6 +7461,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg250MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -7615,7 +7615,7 @@ var info250MBGutenberg_cactus = svg.selectAll(".info250MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -7942,7 +7942,6 @@ d3.json("500MBGutenberg.json", function(error, data) {
 </script>
 <svg id="svg500MBGutenberg_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -7958,6 +7957,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg500MBGutenberg_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -8111,7 +8111,7 @@ var info500MBGutenberg_cactus = svg.selectAll(".info500MBGutenberg_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -8479,7 +8479,6 @@ d3.json("1MBCSV.json", function(error, data) {
 </script>
 <svg id="svg1MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -8495,6 +8494,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg1MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -8648,7 +8648,7 @@ var info1MBCSV_cactus = svg.selectAll(".info1MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -8975,7 +8975,6 @@ d3.json("5MBCSV.json", function(error, data) {
 </script>
 <svg id="svg5MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -8991,6 +8990,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg5MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -9144,7 +9144,7 @@ var info5MBCSV_cactus = svg.selectAll(".info5MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -9471,7 +9471,6 @@ d3.json("10MBCSV.json", function(error, data) {
 </script>
 <svg id="svg10MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -9487,6 +9486,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg10MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -9640,7 +9640,7 @@ var info10MBCSV_cactus = svg.selectAll(".info10MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -9967,7 +9967,6 @@ d3.json("25MBCSV.json", function(error, data) {
 </script>
 <svg id="svg25MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -9983,6 +9982,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg25MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -10136,7 +10136,7 @@ var info25MBCSV_cactus = svg.selectAll(".info25MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -10463,7 +10463,6 @@ d3.json("50MBCSV.json", function(error, data) {
 </script>
 <svg id="svg50MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -10479,6 +10478,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg50MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -10632,7 +10632,7 @@ var info50MBCSV_cactus = svg.selectAll(".info50MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -10959,7 +10959,6 @@ d3.json("100MBCSV.json", function(error, data) {
 </script>
 <svg id="svg100MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -10975,6 +10974,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg100MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -11128,7 +11128,7 @@ var info100MBCSV_cactus = svg.selectAll(".info100MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -11455,7 +11455,6 @@ d3.json("250MBCSV.json", function(error, data) {
 </script>
 <svg id="svg250MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -11471,6 +11470,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg250MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -11624,7 +11624,7 @@ var info250MBCSV_cactus = svg.selectAll(".info250MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -11951,7 +11951,6 @@ d3.json("500MBCSV.json", function(error, data) {
 </script>
 <svg id="svg500MBCSV_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -11967,6 +11966,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg500MBCSV_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -12120,7 +12120,7 @@ var info500MBCSV_cactus = svg.selectAll(".info500MBCSV_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -12491,7 +12491,6 @@ d3.json("1MBLogs.json", function(error, data) {
 </script>
 <svg id="svg1MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -12507,6 +12506,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg1MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -12660,7 +12660,7 @@ var info1MBLogs_cactus = svg.selectAll(".info1MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -12987,7 +12987,6 @@ d3.json("5MBLogs.json", function(error, data) {
 </script>
 <svg id="svg5MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -13003,6 +13002,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg5MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -13156,7 +13156,7 @@ var info5MBLogs_cactus = svg.selectAll(".info5MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -13483,7 +13483,6 @@ d3.json("10MBLogs.json", function(error, data) {
 </script>
 <svg id="svg10MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -13499,6 +13498,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg10MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -13652,7 +13652,7 @@ var info10MBLogs_cactus = svg.selectAll(".info10MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -13979,7 +13979,6 @@ d3.json("25MBLogs.json", function(error, data) {
 </script>
 <svg id="svg25MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -13995,6 +13994,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg25MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -14148,7 +14148,7 @@ var info25MBLogs_cactus = svg.selectAll(".info25MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -14475,7 +14475,6 @@ d3.json("50MBLogs.json", function(error, data) {
 </script>
 <svg id="svg50MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -14491,6 +14490,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg50MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -14644,7 +14644,7 @@ var info50MBLogs_cactus = svg.selectAll(".info50MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -14971,7 +14971,6 @@ d3.json("100MBLogs.json", function(error, data) {
 </script>
 <svg id="svg100MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -14987,6 +14986,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg100MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -15140,7 +15140,7 @@ var info100MBLogs_cactus = svg.selectAll(".info100MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -15467,7 +15467,6 @@ d3.json("250MBLogs.json", function(error, data) {
 </script>
 <svg id="svg250MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -15483,6 +15482,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg250MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -15636,7 +15636,7 @@ var info250MBLogs_cactus = svg.selectAll(".info250MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -15963,7 +15963,6 @@ d3.json("500MBLogs.json", function(error, data) {
 </script>
 <svg id="svg500MBLogs_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -15979,6 +15978,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg500MBLogs_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -16132,7 +16132,7 @@ var info500MBLogs_cactus = svg.selectAll(".info500MBLogs_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -16498,7 +16498,6 @@ d3.json("1MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg1MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -16514,6 +16513,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg1MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -16667,7 +16667,7 @@ var info1MBQwerty_cactus = svg.selectAll(".info1MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -16994,7 +16994,6 @@ d3.json("5MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg5MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -17010,6 +17009,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg5MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -17163,7 +17163,7 @@ var info5MBQwerty_cactus = svg.selectAll(".info5MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -17490,7 +17490,6 @@ d3.json("10MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg10MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -17506,6 +17505,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg10MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -17659,7 +17659,7 @@ var info10MBQwerty_cactus = svg.selectAll(".info10MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -17986,7 +17986,6 @@ d3.json("25MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg25MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -18002,6 +18001,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg25MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -18155,7 +18155,7 @@ var info25MBQwerty_cactus = svg.selectAll(".info25MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -18482,7 +18482,6 @@ d3.json("50MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg50MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -18498,6 +18497,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg50MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -18651,7 +18651,7 @@ var info50MBQwerty_cactus = svg.selectAll(".info50MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -18978,7 +18978,6 @@ d3.json("100MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg100MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -18994,6 +18993,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg100MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -19147,7 +19147,7 @@ var info100MBQwerty_cactus = svg.selectAll(".info100MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -19474,7 +19474,6 @@ d3.json("250MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg250MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -19490,6 +19489,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg250MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -19643,7 +19643,7 @@ var info250MBQwerty_cactus = svg.selectAll(".info250MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")
@@ -19970,7 +19970,6 @@ d3.json("500MBQwerty.json", function(error, data) {
 </script>
 <svg id="svg500MBQwerty_cactus" width="1100" height="700"></svg>
 <script>
-(function() {
 var translator = {};
 translator["zearch"] = "zearch";
 translator["grep"] = "grep";
@@ -19986,6 +19985,7 @@ translator["repair"] = "repair";
 translator["lz4"] = "lz4";
 translator["zstd"] = "zstd";
 translator["gzip"] = "gzip";
+(function() {
 // Draw a line chart
 var svg = d3.select("#svg500MBQwerty_cactus"),
   margin = { top: 100, right: 300, bottom: 100, left: 200 },
@@ -20139,7 +20139,7 @@ var info500MBQwerty_cactus = svg.selectAll(".info500MBQwerty_cactus")
       .attr("dy", ".35em")
       .style("text-anchor", "end")
       .style("font-weight", "bold")
-      .text(function(d) { return translator[d]+":"; });
+      .text(function(d) { return d+":"; });
 
 // Add the mouse line
 var mouseG = g.append("g")

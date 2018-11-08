@@ -1,9 +1,9 @@
-<svg id="svg`'__NAME__`'" width="2000" height="600"></svg>
+<svg id="svg`'__NAME__`'" width="1800" height="600"></svg>
 <script>
 (function() {
 // Draw a line chart
 var svg = d3.select("`#'svg`'__NAME__`'"),
-  margin = { top: 100, right: 100, bottom: 100, left: 100 },
+  margin = { top: 100, right: 170, bottom: 100, left: 100 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
   g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -30,6 +30,22 @@ var yAxis = d3.svg.axis()
 .scale(y)
 .orient("left");
 
+var translator = {};
+translator["zearch"] = "zearch";
+translator["grep"] = "grep";
+translator["ripgrep"] = "ripgrep";
+translator["hyperscan"] = "hyperscan";
+translator["zhs_lz4_p"] = "lz4|hyperscan";
+translator["zhs_zstd_p"] = "zstd|hyperscan";
+translator["zgrep_lz4_p"] = "lz4|grep";
+translator["zgrep_zstd_p"] = "zstd|grep";
+translator["zrg_lz4_p"] = "lz4|ripgrep";
+translator["zrg_zstd_p"] = "zstd|ripgrep";
+translator["repair"] = "repair";
+translator["lz4"] = "lz4";
+translator["zstd"] = "zstd";
+translator["gzip"] = "gzip";
+
 var tip = d3.tip()
   .attr('class', 'd3-tip')
   .offset([-10, 0])
@@ -37,10 +53,9 @@ var tip = d3.tip()
     if (this.parentNode.__data__.name == "lz4" || this.parentNode.__data__.name == "zstd" || this.parentNode.__data__.name == "gzip" || this.parentNode.__data__.name == "repair") {
       return "<strong>No count. Just decompress</strong><br><strong>Time:</strong><span style='color:red'>" + d.worth + "</span>";
     }
-    else if (this.parentNode.__data__.name == "hyperscan") return "<strong>Matches:</strong> <span style='color:red'>" + d.matchesh + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
     else if(d.matchesg == null && d.matchesr == null && d.matchesgg == null) return "<strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err + "</span>";
-    else if(d.matchesg == d.matchesr && d.matchesr == d.matchesgg) return "<strong>Matches:</strong> <span style='color:red'>" + d.matchesg + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
-    else return "<strong>Matches:</strong> <span style='color:red'>" + d.matchesg + "</span><br><strong>(rg):</strong> <span style='color:red'>" + d.matchesr + "</span><br><strong>(grep):</strong> <span style='color:red'>" + d.matchesgg + "</span><br><strong>(hyperscan):</strong> <span style='color:red'>" + d.matchesh + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err + "</span>";
+    else if (this.parentNode.__data__.name == "GNgrep") return "<strong>Matches:</strong> <span style='color:red'>" + d.matchesn + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
+    else return "<strong>Tool:</strong> <span style='color:lightblue'>" + translator[this.parentNode.__data__.name] + "</span><br><strong>Matches:</strong> <span style='color:red'>" + d.matchesg + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
   });
 
 svg.call(tip);
@@ -48,10 +63,6 @@ svg.call(tip);
 var counter = 0;
   // load the data
 d3.json("`'__NAME__`'.json", function(error, data) {
-  // Select the important columns
-  color.domain(d3.keys(data[0]).filter(function(key) {
-      return key !== "Regex" && key !== "MatchesZ" && key !== "MatchesR" && key !== "MatchesGG" && key !== "MatchesH";
-  }));
   var xDomain = [];
   // Correct the types
   data.forEach(function(d) {
@@ -59,8 +70,8 @@ d3.json("`'__NAME__`'.json", function(error, data) {
   });
   console.log(data);
 
-  var currencies = color.domain().map(function(name) {
-    return {
+  var tools = color.domain().map(function(name) {
+   return {
       name: name,
       values: data.map(function(d) {
         return {
@@ -69,22 +80,23 @@ d3.json("`'__NAME__`'.json", function(error, data) {
           matchesr: d.MatchesR,
           matchesgg: d.MatchesGG,
           matchesh: d.MatchesH,
-          worth: +d[name].avg,
-          err: +d[name].err
+          matchesn: d.MatchesN,
+          worth: (name in d ? +d[name].avg : 0),
+          err: (name in d ? +d[name].err : 0)
         };
       })
     };
   });
-  console.log(currencies)
+  console.log(tools)
   // Set the X domains
   x.domain(xDomain);
-  x1.domain(d3.keys(data[0]).filter(function(key) {
+  x1.domain(d3.keys(data[data.length-1]).filter(function(key) {
       return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG" && key !== "gzip" && key !== "repair" && key !== "zstd" && key !== "lz4" && key !== "MatchesH";
   })).rangeRoundBands([0, x.rangeBand()]);
   // Set the Y domain
   y.domain([
     0,
-    d3.max(currencies, function(c) {
+    d3.max(tools, function(c) {
       return d3.max(c.values, function(v) {
         return v.worth;
       });
@@ -108,7 +120,7 @@ d3.json("`'__NAME__`'.json", function(error, data) {
 
   // Draw the bars
   var state = g.selectAll(".regex")
-      .data(currencies)
+      .data(tools)
       .enter().append("g")
       .attr("class", "regex")
       .attr("transform", function(d) { return "translate(" + x1(d.name) + ",0)"; });
@@ -144,20 +156,21 @@ d3.json("`'__NAME__`'.json", function(error, data) {
       .attr("x2", function(d) { return x(d.Regex) + x1.rangeBand()/2; })
       .attr("y1", function(d) { return y(d.worth-d.err); })
       .attr("y2", function(d) { return y(d.worth+d.err); })
-      .style("stroke-width", "5")
+      .style("stroke-width", "4")
       .style("stroke", "black");
 
   // Draw the lines
   // gzip
   var sum = 0;
   var idx;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "gzip") break;
+  for (idx = 0; idx < tools.length; idx++){
+    if (tools[idx].name == "gzip") break;
   }
-  var avg = currencies[idx].values[currencies[idx].values.length-1].worth;
+  var avg = tools[idx].values[tools[idx].values.length-1].worth;
   g.append("line")
     .style("stroke", color("gzip"))
-    .style("stroke-width", "5")
+    .style("stroke-width", "3")
+    .style("stroke-dasharray", ("6, 3"))
     .attr("x1", 0)
     .attr("y1", y(avg))
     .attr("x2", width)
@@ -166,13 +179,14 @@ d3.json("`'__NAME__`'.json", function(error, data) {
   // repair
   sum = 0;
   idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "repair") break;
+  for (idx = 0; idx <= tools.length; idx++){
+    if (tools[idx].name == "repair") break;
   }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
+  avg = tools[idx].values[tools[idx].values.length-1].worth;
   g.append("line")
     .style("stroke", color("repair"))
-    .style("stroke-width", "5")
+    .style("stroke-width", "3")
+    .style("stroke-dasharray", ("6, 3"))
     .attr("x1", 0)
     .attr("y1", y(avg))
     .attr("x2", width)
@@ -181,13 +195,14 @@ d3.json("`'__NAME__`'.json", function(error, data) {
   // lz4
   sum = 0;
   idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "lz4") break;
+  for (idx = 0; idx <= tools.length; idx++){
+    if (tools[idx].name == "lz4") break;
   }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
+  avg = tools[idx].values[tools[idx].values.length-1].worth;
   g.append("line")
     .style("stroke", color("lz4"))
-    .style("stroke-width", "5")
+    .style("stroke-width", "3")
+    .style("stroke-dasharray", ("6, 3"))
     .attr("x1", 0)
     .attr("y1", y(avg))
     .attr("x2", width)
@@ -196,25 +211,24 @@ d3.json("`'__NAME__`'.json", function(error, data) {
   // zstd
   sum = 0;
   idx = 0;
-  for (idx = 0; idx <= currencies.length; idx++){
-    if (currencies[idx].name == "zstd") break;
+  for (idx = 0; idx <= tools.length; idx++){
+    if (tools[idx].name == "zstd") break;
   }
-  avg = currencies[idx].values[currencies[idx].values.length-1].worth;
+  avg = tools[idx].values[tools[idx].values.length-1].worth;
   g.append("line")
     .style("stroke", color("zstd"))
-    .style("stroke-width", "5")
+    .style("stroke-width", "3")
+    .style("stroke-dasharray", ("6, 3"))
     .attr("x1", 0)
     .attr("y1", y(avg))
     .attr("x2", width)
     .attr("y2", y(avg));
 
   var legend = svg.selectAll(".legend")
-      .data(d3.keys(data[0]).filter(function(key) {
-      return key !== "Regex" && key !== "MatchesG" && key !== "MatchesR" && key !== "MatchesGG" && key !== "MatchesH";
-  }).slice())
+      .data(color.domain())
       .enter().append("g")
       .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(" + (margin.right +margin.left) + ", " + i * 20 + ")"; });
+      .attr("transform", function(d, i) { return "translate(" + (margin.right +margin.left) + ", " + (i * 25 + (d == "zstd" || d == "lz4" || d == "gzip" || d == "repair" ? 20 : 0)) + ")"; });
 
   legend.append("rect")
       .attr("x", width - 18)

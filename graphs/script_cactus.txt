@@ -1,9 +1,9 @@
-<svg id="svg`'__NAME__`'" width="1000" height="800"></svg>
+<svg id="svg`'__NAME__`'" width="1400" height="800"></svg>
 <script>
 (function() {
 // Draw a line chart
 var svg = d3.select("`#'svg`'__NAME__`'"),
-  margin = { top: 100, right: 200, bottom: 100, left: 200 },
+  margin = { top: 100, right: 300, bottom: 100, left: 200 },
   width = +svg.attr('width') - margin.left - margin.right,
   height = +svg.attr('height') - margin.top - margin.bottom,
   g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
@@ -41,7 +41,7 @@ var line = d3.svg.line()
 var counter = 0;
   // load the data
 d3.json("__NAME__.json", function(error, data) {
-  var currencies = color.domain().map(function(name) {
+  var tools = color.domain().map(function(name) {
     return {
       name: name,
       values: data.map(function(d) {
@@ -52,19 +52,19 @@ d3.json("__NAME__.json", function(error, data) {
       })
     };
   });
-  console.log(currencies)
+  console.log(tools)
   // Set the X domain
   x.domain(d3.extent(data, function(d) {
     return d.Regex;
   }));
   // Set the Y domain
   y.domain([
-    d3.min(currencies, function(c) {
+    d3.min(tools, function(c) {
       return d3.min(c.values, function(v) {
         return v.worth;
       });
     }),
-    d3.max(currencies, function(c) {
+    d3.max(tools, function(c) {
       return d3.max(c.values, function(v) {
         return v.worth;
       });
@@ -91,12 +91,12 @@ d3.json("__NAME__.json", function(error, data) {
     .text("Time (ms)");
 
   // Draw the lines
-  var currency = g.selectAll(".currency")
-    .data(currencies)
+  var tool = g.selectAll(".tool")
+    .data(tools)
     .enter().append("g")
-    .attr("class", "currency");
+    .attr("class", "tool");
 
-  currency.append("path")
+  tool.append("path")
     .attr("class", "line")
     .attr("d", function(d) {
       return line(d.values);
@@ -105,7 +105,7 @@ d3.json("__NAME__.json", function(error, data) {
       return color(d.name);
     });
   // Add the circles
-  currency.append("g").selectAll("circle")
+  tool.append("g").selectAll("circle")
     .data(function(d){return d.values})
     .enter()
     .append("circle")
@@ -123,7 +123,7 @@ var legend = svg.selectAll(".legend")
   }).slice())
       .enter().append("g")
       .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + i * 20 + ")"; });
+      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + i * 25 + ")"; });
 
   legend.append("rect")
       .attr("x", width - 18)
@@ -146,7 +146,7 @@ var info`'__NAME__`' = svg.selectAll(".info`'__NAME__`'")
       .enter().append("g")
       .attr("class", "info`'__NAME__`'")
       .style("opacity", 0)
-      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (250 + i * 20) + ")"; });
+      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (350 + i * 25) + ")"; });
 
   info`'__NAME__`'.append("text")
       .attr("x", width)
@@ -168,7 +168,7 @@ mouseG.append("path")
   .style("opacity", "0");
 
 var mousePerLine = mouseG.selectAll('.mouse-per-line`'__NAME__`'')
-  .data(currencies)
+  .data(tools)
   .enter()
   .append("g")
   .attr("class", "mouse-per-line`'__NAME__`'");
