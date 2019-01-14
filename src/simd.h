@@ -18,13 +18,12 @@
 					Found concatenation A_origin[j] → B_origin[i] → B_destiny[i]
 
 	Properties:
-		- There is no transition ending on the initial state (by definition of the extended saturation construction this case assumption is completely safe.)
-		- Meant to perform the operations related to the saturation construction, i.e., joint of binary relation.
-		- Each element is a 16-bits value and represents the original/final state of a transition.
-		- Notation: Assume we are processing 'A' in rule 'X → AB'
+		* There is no transition ending on the initial state (by definition of the extended saturation construction this case assumption is completely safe.)
+		* Meant to perform the operations related to the saturation construction, i.e., joint of binary relation.
+		* Each element is a 16*bits value and represents the original/final state of a transition.
+		* Notation: Assume we are processing 'A' in rule 'X → AB'
 
 	Author: Pedro Valero
-	Date: 01-18
 
 	LICENSE: -zearch- Regular Expression Search on Compressed Text.
     Copyright (C) 2018 Pedro Valero & Pierre Ganty
