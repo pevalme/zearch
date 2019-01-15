@@ -50,7 +50,7 @@ These three tools are invoked in the same way:
 ```
 where
 * *-m* is an optional argument. When present, the program will determinize and minimize the automaton, following the algorithm used by *libfa*. Note that this option does not always improves performance.
-* *option* can be `-c`, `-l`, `-a` or `-b` to print the number of matches, the matching lines, both of them or simply inform about whether there is (at least) one match or not respectively.
+* *option* can be `-c`, `-l`, `-a` or `-b` to print the number of matching lines, the matching lines, both of them or simply inform about whether there is (at least) one match or not respectively.
 * *input_regex* is a regular expression following the format accepted by *libfa*.
 * *input_file* is a [repair](https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/re-pair/repair110811.tar.gz)-compressed file.
 
