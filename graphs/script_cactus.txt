@@ -1,5 +1,20 @@
-<svg id="svg`'__NAME__`'" width="1400" height="800"></svg>
+<svg id="svg`'__NAME__`'" width="1100" height="700"></svg>
 <script>
+var translator = {};
+translator["zearch"] = "zearch";
+translator["grep"] = "grep";
+translator["ripgrep"] = "ripgrep";
+translator["hyperscan"] = "hyperscan";
+translator["zhs_lz4_p"] = "lz4|hyperscan";
+translator["zhs_zstd_p"] = "zstd|hyperscan";
+translator["zgrep_lz4_p"] = "lz4|grep";
+translator["zgrep_zstd_p"] = "zstd|grep";
+translator["zrg_lz4_p"] = "lz4|ripgrep";
+translator["zrg_zstd_p"] = "zstd|ripgrep";
+translator["repair"] = "repair";
+translator["lz4"] = "lz4";
+translator["zstd"] = "zstd";
+translator["gzip"] = "gzip";
 (function() {
 // Draw a line chart
 var svg = d3.select("`#'svg`'__NAME__`'"),
@@ -136,7 +151,7 @@ var legend = svg.selectAll(".legend")
       .attr("y", 9)
       .attr("dy", ".35em")
       .style("text-anchor", "end")
-      .text(function(d) { return d; });
+      .text(function(d) { return translator[d]; });
 
 // Add the info`'__NAME__`'
 var info`'__NAME__`' = svg.selectAll(".info`'__NAME__`'")
@@ -146,7 +161,7 @@ var info`'__NAME__`' = svg.selectAll(".info`'__NAME__`'")
       .enter().append("g")
       .attr("class", "info`'__NAME__`'")
       .style("opacity", 0)
-      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (350 + i * 25) + ")"; });
+      .attr("transform", function(d, i) { return "translate(" + (margin.right + margin.left) + ", " + (270 + i * 25) + ")"; });
 
   info`'__NAME__`'.append("text")
       .attr("x", width)
@@ -222,7 +237,7 @@ mouseG.append('svg:rect')
             return data;
           });
 
-        d3.selectAll(".info`'__NAME__`'")[0][i].childNodes[0].innerHTML=d.name+": "+d.values[idx].worth;
+        d3.selectAll(".info`'__NAME__`'")[0][i].childNodes[0].innerHTML=translator[d.name]+": "+d.values[idx].worth;
         d3.selectAll(".info`'__NAME__`'")[0][i].childNodes[0].style.fill=color(d.name);
 
         return "translate(" + x(d.values[idx].Regex) + "," + y(d.values[idx].worth) + ")";

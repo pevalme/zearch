@@ -1,4 +1,4 @@
-<svg id="svg`'__NAME__`'" width="1800" height="600"></svg>
+<svg id="svg`'__NAME__`'" width="1400" height="700"></svg>
 <script>
 (function() {
 // Draw a line chart
@@ -53,7 +53,7 @@ var tip = d3.tip()
     if (this.parentNode.__data__.name == "lz4" || this.parentNode.__data__.name == "zstd" || this.parentNode.__data__.name == "gzip" || this.parentNode.__data__.name == "repair") {
       return "<strong>No count. Just decompress</strong><br><strong>Time:</strong><span style='color:red'>" + d.worth + "</span>";
     }
-    else if(d.matchesg == null && d.matchesr == null && d.matchesgg == null) return "<strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err + "</span>";
+    else if(d.matchesg == null && d.matchesr == null && d.matchesgg == null) return "<strong>Tool:</strong> <span style='color:lightblue'>" + translator[this.parentNode.__data__.name] + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err + "</span>";
     else if (this.parentNode.__data__.name == "GNgrep") return "<strong>Matches:</strong> <span style='color:red'>" + d.matchesn + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
     else return "<strong>Tool:</strong> <span style='color:lightblue'>" + translator[this.parentNode.__data__.name] + "</span><br><strong>Matches:</strong> <span style='color:red'>" + d.matchesg + "</span><br><strong>Time(ms): </strong><span style='color:red'>" + d.worth + "&plusmn" + d.err +"</span>";
   });
@@ -241,7 +241,7 @@ d3.json("`'__NAME__`'.json", function(error, data) {
       .attr("y", 9)
       .attr("dy", ".35em")
       .style("text-anchor", "end")
-      .text(function(d) { return d; });
+      .text(function(d) { return translator[d]; });
 
 });
 })();
