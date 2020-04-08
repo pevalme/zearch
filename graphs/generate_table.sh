@@ -2,11 +2,10 @@
 #
 # Author:	Pedro Valero
 #
-# Description: Script to compare with other tools.
+# Description: Script to compare zearch with other tools.
 #
-# Date: 13/10/2017
+# Date: 14/01/2019
 
-RG="../../ripgrep-0.10.0-x86_64-unknown-linux-musl/rg"
 REPAIR="../../repair110811/repair"
 DESPAIR="../../repair110811/despair"
 GREP="../../grep-3.3/src/grep"
@@ -18,23 +17,11 @@ NAVARRO="../../code/search"
 LZW="../../code/compress"
 GZIP="../../gzip-1.9/gzip"
 COUNTER=0
-TOCACTUS="./cactus-plot.py"
-STATS="stats.txt"
 
 TMP="tmp.txt"
 STATS_SCRIPT="./statistics.py"
 
 DE_COMPRESSORS=1
-
-## Required size of the originals (+ .rp, .zst, .gz):
-##
-## 100KB
-## 500KB
-## 1MB
-## 2MB
-## 5MB
-## 25MB
-## 100MB
 
 # args: regex for rg, regex for zearch, regex por grep input (compress .rp)
 run_simple_case() {
@@ -124,20 +111,6 @@ run_simple_case() {
 			echo $((END-BEGIN)) >> grep.txt
 		done
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zgrep_lz4.txt
-		# done
-		# echo "\"zgrep_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		rm $TMP
@@ -294,104 +267,103 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.lz4)
 			echo "\"lz4_s\": $FILESIZE," >> $JSON
 
-			# rm $TMP
-			# cp $FILE$SIZE".txt" "a.txt"
-			# LC_ALL=C $LZW -f "a.txt"
-			# LC_ALL=C $LZW -dc "a.txt.Z" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $LZW -dc "a.txt.Z" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"LZW_d\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-			# FILESIZE=$(stat -c%s $FILE$SIZE.txt.Z)
-			# echo "\"lzw_s\": $FILESIZE," >> $JSON
+			rm $TMP
+			cp $FILE$SIZE".txt" "a.txt"
+			LC_ALL=C $LZW -f "a.txt"
+			LC_ALL=C $LZW -dc "a.txt.Z" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $LZW -dc "a.txt.Z" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"LZW_d\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			FILESIZE=$(stat -c%s $FILE$SIZE.txt.Z)
+			echo "\"lzw_s\": $FILESIZE," >> $JSON
 
-			# rm $TMP
-			# LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"despair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-			# FILESIZE=$(stat -c%s $FILE$SIZE.txt.rp)
-			# echo "\"repair_s\": $FILESIZE," >> $JSON
+			rm $TMP
+			LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"despair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			FILESIZE=$(stat -c%s $FILE$SIZE.txt.rp)
+			echo "\"repair_s\": $FILESIZE," >> $JSON
 
-			# rm $TMP
-			# cp $FILE$SIZE".txt" "a.txt"
-			# LC_ALL=C $GZIP -f "a.txt"
-			# LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"gzip_d\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-			# FILESIZE=$(stat -c%s $FILE$SIZE.txt.gz)
-			# echo "\"gzip_s\": $FILESIZE," >> $JSON
+			rm $TMP
+			cp $FILE$SIZE".txt" "a.txt"
+			LC_ALL=C $GZIP -f "a.txt"
+			LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"gzip_d\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			FILESIZE=$(stat -c%s $FILE$SIZE.txt.gz)
+			echo "\"gzip_s\": $FILESIZE," >> $JSON
 
-			# rm $TMP
-			# LC_ALL=C $ZSTD -c --ultra -22 $FILE$SIZE".txt" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $ZSTD -c --ultra -22 $FILE$SIZE".txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			rm $TMP
+			LC_ALL=C $ZSTD -c --ultra -22 $FILE$SIZE".txt" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $ZSTD -c --ultra -22 $FILE$SIZE".txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			# rm $TMP
-			# LC_ALL=C $LZ4 -c -9 $FILE$SIZE".txt" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $LZ4 -c -9 $FILE$SIZE".txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			rm $TMP
+			LC_ALL=C $LZ4 -c -9 $FILE$SIZE".txt" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $LZ4 -c -9 $FILE$SIZE".txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			# rm $TMP
-			# cp $FILE$SIZE".txt" "a.txt"
-			# LC_ALL=C $LZW -c "a.txt" > /dev/null
-			# rm a.txt.Z
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $LZW -c "a.txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# 	rm a.txt.Z
-			# done
-			# echo "\"LZW\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			rm $TMP
+			cp $FILE$SIZE".txt" "a.txt"
+			LC_ALL=C $LZW -c "a.txt" > /dev/null
+			rm a.txt.Z
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $LZW -c "a.txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+				rm a.txt.Z
+			done
+			echo "\"LZW\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			# rm $TMP
-			# cp $FILE$SIZE".txt" "a.txt"
-			# LC_ALL=C $GZIP -c -9 "a.txt" > /dev/null
-			# rm a.txt.gz
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $GZIP -c -9 "a.txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# 	rm a.txt.gz
-			# done
-			# echo "\"gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			rm $TMP
+			cp $FILE$SIZE".txt" "a.txt"
+			LC_ALL=C $GZIP -c -9 "a.txt" > /dev/null
+			rm a.txt.gz
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $GZIP -c -9 "a.txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+				rm a.txt.gz
+			done
+			echo "\"gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			# rm $TMP
-			# LC_ALL=C $REPAIR $FILE$SIZE".txt" > /dev/null
-			# for i in `seq 1 $REPS`; do
-			# 	BEGIN=$(date +%s%3N)
-			# 	LC_ALL=C $REPAIR $FILE$SIZE".txt" > /dev/null
-			# 	END=$(date +%s%3N)
-			# 	echo $((END-BEGIN)) >> $TMP
-			# done
-			# echo "\"repair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
+			rm $TMP
+			LC_ALL=C $REPAIR $FILE$SIZE".txt" > /dev/null
+			for i in `seq 1 $REPS`; do
+				BEGIN=$(date +%s%3N)
+				LC_ALL=C $REPAIR $FILE$SIZE".txt" > /dev/null
+				END=$(date +%s%3N)
+				echo $((END-BEGIN)) >> $TMP
+			done
+			echo "\"repair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 		fi
 
-		# echo "\"ripgrep\": "`$STATS_SCRIPT ripgrep.txt`"," >> $JSON
 		echo "\"zearch\": "`$STATS_SCRIPT gsearch.txt`"," >> $JSON
 		echo "\"grep\": "`$STATS_SCRIPT grep.txt`"," >> $JSON
 		echo "\"hyperscan\": "`$STATS_SCRIPT hyperscan.txt`"," >> $JSON
