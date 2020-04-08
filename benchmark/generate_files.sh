@@ -10,12 +10,14 @@
 ZSTD="zstd"
 LZ4="../../../lz4/lz4"
 COMPRESS="../../../code/compress"
-REPAIR="../../../repair110811/repair"
+REPAIR="../../../Re-Pair/repair110811/repair"
 GZIP="../../../gzip-1.9/gzip"
 
 # Variables for the script. Modify them on your own responsibility
 BLUE="\033[0;34m"
 NC="\033[0m" # No Color
+
+RANDOM=0 # Set to 1 to generate random files. Not used for the final experiments.
 
 split_and_compress() {
 	dd if=original.txt of=original500MB.txt bs=500 count=1048576
@@ -26,6 +28,12 @@ split_and_compress() {
 	dd if=original.txt of=original10MB.txt bs=10 count=1048576
 	dd if=original.txt of=original5MB.txt bs=5 count=1048576
 	dd if=original.txt of=original1MB.txt bs=1 count=1048576
+	dd if=original.txt of=original100KB.txt bs=1 count=102400
+	dd if=original.txt of=original75KB.txt bs=1 count=76800
+	dd if=original.txt of=original50KB.txt bs=5 count=10240
+	dd if=original.txt of=original25KB.txt bs=1 count=25600
+	dd if=original.txt of=original10KB.txt bs=1 count=10240
+	dd if=original.txt of=original1KB.txt bs=1 count=1024
 
 	rm original.txt
 
@@ -37,6 +45,12 @@ split_and_compress() {
 	$ZSTD -k -f --ultra -22 original10MB.txt
 	$ZSTD -k -f --ultra -22 original5MB.txt
 	$ZSTD -k -f --ultra -22 original1MB.txt
+	$ZSTD -k -f --ultra -22 original100KB.txt
+	$ZSTD -k -f --ultra -22 original75KB.txt
+	$ZSTD -k -f --ultra -22 original50KB.txt
+	$ZSTD -k -f --ultra -22 original25KB.txt
+	$ZSTD -k -f --ultra -22 original10KB.txt
+	$ZSTD -k -f --ultra -22 original1KB.txt
 
 	$LZ4 -f -9 -k -m original500MB.txt
 	$LZ4 -f -9 -k -m original250MB.txt
@@ -46,6 +60,12 @@ split_and_compress() {
 	$LZ4 -f -9 -k -m original10MB.txt
 	$LZ4 -f -9 -k -m original5MB.txt
 	$LZ4 -f -9 -k -m original1MB.txt
+	$LZ4 -f -9 -k -m original100KB.txt
+	$LZ4 -f -9 -k -m original75KB.txt
+	$LZ4 -f -9 -k -m original50KB.txt
+	$LZ4 -f -9 -k -m original25KB.txt
+	$LZ4 -f -9 -k -m original10KB.txt
+	$LZ4 -f -9 -k -m original1KB.txt
 
 	$GZIP -f -9 -k -m original500MB.txt
 	$GZIP -f -9 -k -m original250MB.txt
@@ -55,6 +75,12 @@ split_and_compress() {
 	$GZIP -f -9 -k -m original10MB.txt
 	$GZIP -f -9 -k -m original5MB.txt
 	$GZIP -f -9 -k -m original1MB.txt
+	$GZIP -f -9 -k -m original100KB.txt
+	$GZIP -f -9 -k -m original75KB.txt
+	$GZIP -f -9 -k -m original50KB.txt
+	$GZIP -f -9 -k -m original25KB.txt
+	$GZIP -f -9 -k -m original10KB.txt
+	$GZIP -f -9 -k -m original1KB.txt
 
 	cp original500MB.txt a.txt
 	$COMPRESS a.txt
@@ -80,6 +106,24 @@ split_and_compress() {
 	cp original1MB.txt a.txt
 	$COMPRESS a.txt
 	mv a.txt.Z original1MB.txt.Z
+	cp original100KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original100KB.txt.Z
+	cp original75KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original75KB.txt.Z
+	cp original50KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original50KB.txt.Z
+	cp original25KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original25KB.txt.Z
+	cp original10KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original10KB.txt.Z
+	cp original1KB.txt a.txt
+	$COMPRESS a.txt
+	mv a.txt.Z original1KB.txt.Z
 
 	$REPAIR original500MB.txt
 	$REPAIR original250MB.txt
@@ -89,6 +133,12 @@ split_and_compress() {
 	$REPAIR original10MB.txt
 	$REPAIR original5MB.txt
 	$REPAIR original1MB.txt
+	$REPAIR original100KB.txt
+	$REPAIR original75KB.txt
+	$REPAIR original50KB.txt
+	$REPAIR original25KB.txt
+	$REPAIR original10KB.txt
+	$REPAIR original1KB.txt
 }
 
 echo "This script requires the following programs:"
@@ -98,10 +148,10 @@ echo "  repair"
 echo "  compress"
 echo "Please, confirm all of them are available and variables at the beginning of this file and set properly for your setup."
 echo "Press any key to continue or ctrl+C to exit"
-# read
+read
 
 echo "Are you sure you want to download all files used for the experiments in \"Regular Expression Searching in Compressed Text\" by P. Ganty and P. Valero?"
-echo "This requires 12 GB of disk space"
+echo "This requires 12 GB of disk space [y/n]"
 read ANSWER
 
 if [[ $ANSWER != "y" ]];
@@ -178,7 +228,7 @@ fi
 echo "done"
 echo "Downloading books from Gutenberg Dataset..."
 echo "This may take a while..."
-./download_gdrive.py 0B2Mzhc7popBga2RkcWZNcjlRTGM gutenberg.zip
+../download_gdrive.py 0B2Mzhc7popBga2RkcWZNcjlRTGM gutenberg.zip
 unzip -u gutenberg.zip
 cd Gutenberg/txt
 ../../../extract_books.sh
@@ -200,8 +250,6 @@ echo "DONE"
 echo ""
 echo "==================================================="
 echo ""
-
-exit
 
 echo "Do you want to download all files used for the experiments? (even those not included in the paper) [y/n]"
 read ALL_FILES
@@ -281,11 +329,16 @@ echo ""
 echo "==================================================="
 echo ""
 
+if [[ $RANDOM == 0 ]]; then
+	echo "ALL FILES GENERATED"
+	exit
+fi
+
 echo -e "$BLUE============== Preparing Random files ==============$NC"
 mkdir -p random01
 cd random01
 
-cat /dev/urandom | tr -dc "01" | dd bs=1048576 count=500 2>/dev/null > random.txt
+cat /dev/urandom | tr -dc "01" | dd bs=10M count=50 iflags=fullblock 2>/dev/null > random.txt
 
 echo "Data created!!"
 
@@ -299,9 +352,8 @@ cd ..
 echo -e "$BLUE============== Preparing RandomL files ==============$NC"
 mkdir -p random01lines
 cd random01lines
-cd ..
 
-cat /dev/urandom | tr -dc "0123456789\n" | dd bs=1048576 count=500 2>/dev/null > tmp.txt
+cat /dev/urandom | tr -dc "0123456789\n" | dd bs=10M count=50 iflags=fullblock 2>/dev/null > tmp.txt
 cat tmp.txt | tr "2" "0" | tr "4" "0" | tr "6" "0" | tr "8" "0" | tr "3" "1" | tr "5" "1" | tr "7" "1" | tr "9" "1" > random.txt
 rm tmp.txt 
 echo "Data created!!"
@@ -313,3 +365,4 @@ echo "Generating files of different sizes and compressing them"
 split_and_compress
 cd ..
 
+echo "ALL FILES GENERATED"

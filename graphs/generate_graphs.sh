@@ -4,13 +4,12 @@
 #
 # Description: Script to compare with other tools.
 #
-# Date: 13/10/2017
-# Last update: 19/10/2018
+# Date: 19/10/2018
 
 RG="../../ripgrep-0.10.0-x86_64-unknown-linux-musl/rg"
-REPAIR="../../repair110811/repair"
-DESPAIR="../../repair110811/despair"
-GREP="../../grep-3.1/src/grep"
+REPAIR="../../Re-Pair/repair110811/repair"
+DESPAIR="../../Re-Pair/repair110811/despair"
+GREP="../../grep-3.3/src/grep"
 ZEARCH="../zearch"
 HYPERSCAN="./hyperscan"
 LZ4="../../lz4/lz4"
@@ -21,24 +20,12 @@ LZW="../../code/compress"
 GZIP="../../gzip-1.9/gzip"
 COUNTER=0
 TOCACTUS="./cactus_plot.py"
-STATS="stats.txt"
-# TIMEOUTRATIO=50
 STATS_COUNTER=0
 
 INDEX="index.html"
 
 TMP="tmp.txt"
 STATS_SCRIPT="./statistics.py"
-
-## Required size of the originals (+ .rp, .zst, .gz, .Z):
-##
-## 1MB
-## 2MB
-## 5MB
-## 25MB
-## 100MB
-## 250MB
-## 500MB
 
 # args: regex for rg, regex for zearch, regex por grep input (compress .rp)
 run_simple_case() {
@@ -68,12 +55,6 @@ run_simple_case() {
 
 	MATCHESH=$(LC_ALL=C $TIMEOUT $HYPERSCAN "$1.*$" $6 2>/dev/null)
 	if [[ $? == 124 ]]; then HTO=1; MATCHESH=0; fi
-
-	# MATCHESN=$($TIMEOUT $NAVARRO "$4" $6.Z 2>/dev/null)
-	# if [[ $? == 124 ]]; then NTO=1; MATCHESN=0; fi
-
-	# MATCHESN=$($TIMEOUT $NAVARRO "$4" $6.Z 2>/dev/null)
-	# if [[ $? == 139 ]]; then NSF=1; MATCHESN=-1; fi
 
 	# ZEARCH
 	rm $TMP
@@ -137,20 +118,6 @@ run_simple_case() {
 		done
 		echo "\"zgrep_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $GREP -c "$3"
-		# rm $TMP
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $GREP -c "$3"
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $GREP -c "$3"
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $GREP -c "$3"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $GREP -c "$3"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zgrep_gzip_p.txt
-		# done
-		# echo "\"zgrep_gzip_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
 		LC_ALL=C $GREP -c "$3" "$6"
 		rm $TMP
 		LC_ALL=C $GREP -c "$3" "$6"
@@ -164,48 +131,6 @@ run_simple_case() {
 			echo $((END-BEGIN)) >> grep.txt
 		done
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zgrep_lz4.txt
-		# done
-		# echo "\"zgrep_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zgrep_zstd.txt
-		# done
-		# echo "\"zgrep_zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $GREP -c "$3"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zgrep_gzip.txt
-		# done
-		# echo "\"zgrep_gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	fi
 
 	# HYPERSCAN
@@ -313,20 +238,6 @@ run_simple_case() {
 		done
 		echo "\"zrg_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# rm $TMP
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C $GZIP -dc $6.gz | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zrg_gzip_p.txt
-		# done
-		# echo "\"zrg_gzip_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
 		rm $TMP
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
@@ -340,87 +251,12 @@ run_simple_case() {
 			echo $((END-BEGIN)) >> ripgrep.txt
 		done
 		echo "\"ripgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $ZSTD -dc $6.zst | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zrg_zstd.txt
-		# done
-		# echo "\"zrg_zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		rm $TMP
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		for i in `seq 1 $REPS`; do
-			BEGIN=$(date +%s%3N)
-			LC_ALL=C taskset -c 3 $LZ4 -dc $6.lz4 | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-			END=$(date +%s%3N)
-			echo $((END-BEGIN)) >> $TMP
-			echo $((END-BEGIN)) >> zrg_lz4.txt
-		done
-		echo "\"zrg_lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# rm $TMP
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# for i in `seq 1 $REPS`; do
-		# 	BEGIN=$(date +%s%3N)
-		# 	LC_ALL=C taskset -c 3 $GZIP -dc $6.gz | LC_ALL=C taskset -c 3 $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		# 	END=$(date +%s%3N)
-		# 	echo $((END-BEGIN)) >> $TMP
-		# 	echo $((END-BEGIN)) >> zrg_gzip.txt
-		# done
-		# echo "\"zrg_gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	fi
-
-	# NAVARRO
-
-	# if [[ $NSF == 1 ]]; then
-	# 	rm $TMP
-	# 	for i in `seq 1 $REPS`; do
-	# 		echo 0 >> $TMP
-	# 		echo 0 >> navarro.txt
-	# 	done
-	# 	echo "\"GNgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	# elif [[ $NTO == 1 ]]; then
-	# 	rm $TMP
-	# 	for i in `seq 1 $REPS`; do
-	# 		echo 20000 >> $TMP
-	# 		echo 20000 >> navarro.txt
-	# 	done
-	# 	echo "\"GNgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	# else
-	# 	LC_ALL=C $NAVARRO "$4" $6.Z
-	# 	rm $TMP
-	# 	LC_ALL=C $NAVARRO "$4" $6.Z
-	# 	LC_ALL=C $NAVARRO "$4" $6.Z
-	# 	LC_ALL=C $NAVARRO "$4" $6.Z
-	# 	for i in `seq 1 $REPS`; do
-	# 		BEGIN=$(date +%s%3N)
-	# 		LC_ALL=C $NAVARRO "$4" $6.Z
-	# 		END=$(date +%s%3N)
-	# 		echo $((END-BEGIN)) >> $TMP
-	# 		echo $((END-BEGIN)) >> navarro.txt
-	# 	done
-	# 	echo "\"GNgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
-	# fi
 
 	echo "\"MatchesZ\": $MATCHESZ," >> $JSON
 	echo "\"MatchesGG\": $MATCHESGG," >> $JSON
 	echo "\"MatchesR\": $MATCHESR," >> $JSON
 	echo "\"MatchesH\": $MATCHESH" >> $JSON
-	# echo "\"MatchesN\": $MATCHESN" >> $JSON
 }
 
 iterate_sizes() {
@@ -452,24 +288,24 @@ iterate_sizes() {
 		# (De)compression
 		REPS=3
 		rm $TMP
-		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst | tail -n1 > /dev/null
-		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst | tail -n1 > /dev/null
-		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst | tail -n1 > /dev/null
+		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
+		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
+		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
 		for i in `seq 1 $REPS`; do
 			BEGIN=$(date +%s%3N)
-			LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst | tail -n1 > /dev/null
+			LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
 			END=$(date +%s%3N)
 			echo $((END-BEGIN)) >> $TMP
 		done
 		echo "\"zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		rm $TMP
-		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 | tail -n1 > /dev/null
-		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 | tail -n1 > /dev/null
-		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 | tail -n1 > /dev/null
+		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
+		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
+		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
 		for i in `seq 1 $REPS`; do
 			BEGIN=$(date +%s%3N)
-			LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 | tail -n1 > /dev/null
+			LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
 			END=$(date +%s%3N)
 			echo $((END-BEGIN)) >> $TMP
 		done
@@ -490,12 +326,12 @@ iterate_sizes() {
 		rm $TMP
 		cp $FILE$SIZE".txt" "a.txt"
 		LC_ALL=C $GZIP -f "a.txt"
-		LC_ALL=C $GZIP -dc "a.txt.gz" | tail -n1 > /dev/null
-		LC_ALL=C $GZIP -dc "a.txt.gz" | tail -n1 > /dev/null
-		LC_ALL=C $GZIP -dc "a.txt.gz" | tail -n1 > /dev/null
+		LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
+		LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
+		LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
 		for i in `seq 1 $REPS`; do
 			BEGIN=$(date +%s%3N)
-			LC_ALL=C $GZIP -dc "a.txt.gz" | tail -n1 > /dev/null
+			LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
 			END=$(date +%s%3N)
 			echo $((END-BEGIN)) >> $TMP
 		done
@@ -723,14 +559,6 @@ echo "<p id=\"p12\"> lz4:</p>" >> $INDEX
 echo "<p id=\"p13\"> zstd:</p>" >> $INDEX
 echo "<p id=\"p14\"> gzip:</p>" >> $INDEX
 
-# echo "<p id=\"p1\"> <a href=\"https://github.com/pevalme/zearch\">zearch</a>: Using the algorithms described <a href=\"https://pevalme.github.io/zearch/main.pdf\">here</a></p>" >> $INDEX
-# echo "<p id=\"p2\"> zgrep_lz4: Search with grep on the uncompressed text as it is recovered with <a href=\"https://github.com/lz4/lz4\">lz4</a>. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>" >> $INDEX
-# echo "<p id=\"p3\"> zgrep_zstd: Search with grep on the uncompressed text as it is recovered with <a href=\"https://github.com/facebook/zstd\">zstd</a>. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>" >> $INDEX
-# echo "<p id=\"p4\"> <a href=\"https://ftp.gnu.org/gnu/grep/\">grep</a>: Version: 3.1</p>" >> $INDEX
-# echo "<p id=\"p5\"> zrg_lz4: search with ripgrep on the uncompressed text as it is recovered with lz4. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>" >> $INDEX
-# echo "<p id=\"p6\"> zrg_zstd: search with ripgrep on the uncompressed text as it is recovered with zstd. Decompression and search forced to operate in one CPU using Linux command taskset -c.</p>" >> $INDEX
-# echo "<p id=\"p7\"> <a href=\"https://github.com/BurntSushi/ripgrep\">ripgrep</a>: Run with maximum dfa-size-limit and regex-size-limit. Version: 0.7.1</p>" >> $INDEX
-
 echo "<br>" >> $INDEX
 echo "<h1><center> Overview </center></h1>" >> $INDEX
 echo "<div class=\"description\">" >> $INDEX
@@ -751,9 +579,7 @@ rerp=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[
 regsearch=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]{4}" "[0-9]{9}" " (19|20)[0-9]{2} " " [a-z]{2} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 regrep=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]\{4\}" "[0-9]\{9\}" " \(19\|20\)[0-9]\{2\} " " [a-z]\{2\} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 ren=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z][a-z][a-z][a-z]" "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" " (19|20)[0-9][0-9] " " [a-z][a-z] " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
-iterate_files ../benchmark/subs/original Subtitles 5 1MB 
-
-exit
+iterate_files ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 
 #############################
@@ -767,7 +593,7 @@ regsearch=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* yo
 regrep=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]\{4\}" "[0-9]\{9\}" " \(19\|20\)[0-9]\{2\} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 ren=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z][a-z][a-z][a-z]" "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" " (19|20)[0-9][0-9] " " [a-z][a-z] " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 
-iterate_files ../benchmark/gutenberg/original Gutenberg 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+iterate_files ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 #############################
 ##
@@ -780,7 +606,7 @@ regsearch=("." "wosel" "1993" "20[0-9]{2}" ".*5" "[a-z]{5}" " [0-9]{9} ")
 regrep=("." "wosel" "1993" "20[0-9]\{2\}" ".*5" "[a-z]\{5\}" " [0-9]\{9\} ")
 ren=("." "wosel" "1993" "20[0-9][0-9]" ".*5" "[a-z][a-z][a-z][a-z][a-z]" " [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] ")
 
-iterate_files ../benchmark/csv/original CSV 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+iterate_files ../benchmark/csv/original CSV 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 #############################
 ##
@@ -793,7 +619,7 @@ regsearch=("." "wosel" "port" "20[0-9]{2}" "([0-9]{3}\.){3}[0-9]" "[0-9]{4}" "([
 regrep=("." "wosel" "port" "20[0-9]\{2\}" "\([0-9]\{3\}\.\)\{3\}[0-9]" "[0-9]\{4\}" "\([a-z]\+\.\)\+[a-z]\+ - -" "\"GET .*\" \([13-9]\|2[1-9]\|2-[1-9]\)" "(([0-9])\|([0-2][0-9])\|([3][0-1]))/(Jan\|Feb\|Mar\|Apr\|May\|Jun\|Jul\|Aug\|Sep\|Oct\|Nov\|Dec)/[0-9]\{4\}" "(([0-9])\|([0-2][0-9])\|([3][0-1]))-(Jan\|Feb\|Mar\|Apr\|May\|Jun\|Jul\|Aug\|Sep\|Oct\|Nov\|Dec)-[0-9]\{4\}")
 ren=("." "wosel" "port" "20[0-9][0-9]" "([0-9]{3}\.){3}[0-9]" "[0-9]{4}" "([a-z]+\.)+[a-z]+ - -" "\"GET .*\" ([13-9]|2[1-9]|2-[1-9])" "(([0-9])|([0-2][0-9])|([3][0-1]))/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/[0-9]{4}" "(([0-9])|([0-2][0-9])|([3][0-1]))-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-9]{4}")
 
-iterate_files ../benchmark/logs/original Logs 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+iterate_files ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 #############################
 ##
@@ -805,7 +631,7 @@ rerp=("." "wosel" "0100101" "[0-1]{9}" "[0-1]{6,10}" "(0110101){2}" "[0-1]*1[0-1
 regsearch=("." "wosel" "0100101" "[0-1]{9}" "[0-1]{6,10}" "(0110101){2}" "[0-1]*1[0-1]{5}2" "[0-1]*1[0-1]{10}2" "[0-1]*1[0-1]{15}2" "[0-1]*1[0-1]{16}2" "[0-1]*1[0-1]{17}2" "[0-1]*1[0-1]{18}2" "[0-1]*1[0-1]{19}2" "[0-1]*1[0-1]{20}2")
 regrep=("." "wosel" "0100101" "[0-1]\{9\}" "[0-1]\{6,10\}" "(0110101)\{2\}" "[0-1]*1[0-1]\{5\}2" "[0-1]*1[0-1]\{10\}2" "[0-1]*1[0-1]\{15\}2" "[0-1]*1[0-1]\{16\}2" "[0-1]*1[0-1]\{17\}2" "[0-1]*1[0-1]\{18\}2" "[0-1]*1[0-1]\{19\}2" "[0-1]*1[0-1]\{20\}2")
 
-iterate_files ../benchmark/random01/original Random 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+# iterate_files ../benchmark/random01/original Random 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 #############################
 ##
@@ -817,7 +643,7 @@ rerp=("." "wosel" "0100101" "[0-1]{9}" "[0-1]{6,10}" "(0110101){2}" "[0-1]*1[0-1
 regsearch=("." "wosel" "0100101" "[0-1]{9}" "[0-1]{6,10}" "(0110101){2}" "[0-1]*1[0-1]{5}2" "[0-1]*1[0-1]{10}2" "[0-1]*1[0-1]{15}2" "[0-1]*1[0-1]{20}2" "[0-1]*1[0-1]{25}2")
 regrep=("." "wosel" "0100101" "[0-1]\{9\}" "[0-1]\{6,10\}" "(0110101)\{2\}" "[0-1]*1[0-1]\{5\}2" "[0-1]*1[0-1]\{10\}2" "[0-1]*1[0-1]\{15\}2" "[0-1]*1[0-1]\{20\}2" "[0-1]*1[0-1]\{25\}2")
 
-iterate_files ../benchmark/random01lines/original RandomL 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+# iterate_files ../benchmark/random01lines/original RandomL 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
 #############################
 ##
@@ -829,4 +655,4 @@ rerp=("." "qwerty" "qwerti" "wosel" "[a-z]{5}")
 regsearch=("." "qwerty" "qwerti" "wosel" "[a-z]{5}")
 regrep=("." "qwerty" "qwerti" "wosel" "[a-z]\{5\}")
 
-iterate_files ../benchmark/yes/original Qwerty 5 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+iterate_files ../benchmark/yes/original Qwerty 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
