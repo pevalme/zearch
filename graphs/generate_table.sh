@@ -6,8 +6,8 @@
 #
 # Date: 14/01/2019
 
-REPAIR="../../repair110811/repair"
-DESPAIR="../../repair110811/despair"
+REPAIR="../../Re-Pair/repair110811/repair"
+DESPAIR="../../Re-Pair/repair110811/despair"
 GREP="../../grep-3.3/src/grep"
 ZEARCH="../zearch"
 HYPERSCAN="./hyperscan"
@@ -390,9 +390,11 @@ regrep=("what" "HTTP" "." "I .* you" " [a-z]\{4\} " "[0-9]\{2\}/\(\(Jun\)\|\(Jul
 ren=("what[^\n]*\n" "HTTP[^\n]*\n" "[^\n][^\n]*\n" "I [^\n]* you[^\n]*\n" " [a-z][a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9]/((Jun)|(Jul)|(Aug))/[0-9][0-9][0-9][0-9][^\n]*\n" " [a-z]*[a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9][0-9][0-9][^\n]*\n")
 relz=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
 
+iterate_sizes ../benchmark/yes/original What 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/subs/original Subtitles 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/logs/original Logs 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
-iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB
-iterate_sizes ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB
-iterate_sizes ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB
+
+# iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB
+# iterate_sizes ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB
+# iterate_sizes ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB
