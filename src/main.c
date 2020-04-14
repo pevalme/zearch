@@ -35,7 +35,7 @@
 #include "nfa.h"
 
 /*
-	Overflow rick works because in the worst-case scenario a 100MB file can cause, at most, one overflow.
+	Overflow trick works for, at most, one overflow.
 */
 
 /*****************************

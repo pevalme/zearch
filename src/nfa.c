@@ -10,8 +10,8 @@
 		unsigned char final[NUM_PAIRS_INITIAL];
 		short first_block;
 		short first_index;
-		unsigned int count : 24; // This allow us to count, easily, up to 2**24 = 16777216
-		unsigned char new_lines : 2; // Can be 0, 1 or 2
+		unsigned int count : 25; // This allow us to count, easily, up to 2**25 = 33554432
+		unsigned char new_lines : 1; // Can be 0 or 1
 		unsigned char is_there : 1;
 		// Variables for counting
 		unsigned char match : 1;
@@ -341,7 +341,7 @@ void add_rule(){
 	trule = tempty;
 
 	// Propagate
-	trule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
+	trule.new_lines = tleft.new_lines || tright.new_lines;
 
 	// Default values
 	trule.match = 0;
@@ -511,7 +511,7 @@ void add_rule_seq(){
 		seq_counter_new = 0;
 
 		// Propagate
-		tsrule.new_lines = MIN(tsleft.new_lines + tright.new_lines, 2);
+		tsrule.new_lines = tsleft.new_lines || tright.new_lines;
 
 		DEBUG_PRINT("2Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tsleft.new_lines, right, tright.new_lines);
 
@@ -557,7 +557,7 @@ void add_rule_seq(){
 		tsrule = tsempty;
 
 		// Propagate
-		tsrule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
+		tsrule.new_lines = tleft.new_lines || tright.new_lines;
 
 		DEBUG_PRINT("3Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tleft.new_lines, right, tright.new_lines);
 
@@ -648,7 +648,7 @@ void add_rule_seq_count(){
 		seq_counter_new = 0;
 
 		// Propagate
-		tsrule.new_lines = MIN(tsleft.new_lines + tright.new_lines, 2);
+		tsrule.new_lines = tsleft.new_lines || tright.new_lines;
 
 		DEBUG_PRINT("2Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tsleft.new_lines, right, tright.new_lines);
 
@@ -705,7 +705,7 @@ void add_rule_seq_count(){
 		tsrule = tsempty;
 
 		// Propagate
-		tsrule.new_lines = MIN(tleft.new_lines + tright.new_lines,2);
+		tsrule.new_lines = tleft.new_lines || tright.new_lines;
 
 		DEBUG_PRINT("3Looking at: %d (%d) → %d (%d) %d (%d)\n", rule, tsrule.new_lines, left, tleft.new_lines, right, tright.new_lines);
 
