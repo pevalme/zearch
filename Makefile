@@ -8,7 +8,7 @@ DEBUG = -DDEBUG
 STATS = -DSTATS
 PLOT = -DPLOT
 
-CC = gcc-7
+CC = gcc-8
 
 zearch: $(obj)
 	$(CC) -o $@ $(CFLAGS) $^ $(LFLAGS)
