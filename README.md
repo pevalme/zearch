@@ -3,6 +3,8 @@
 What is it?
 **zearch** is a regular expression engine that takes in input a regular expression and a grammar-based compressed text and returns every line of the uncompressed text containing a match for the regular expression.
 
+**zearch** is the implementation of an algorithm presented at the Data Compression Conference (DCC) in 2019. A link to the article is given [here](https://doi.org/10.1109/DCC.2019.00061).
+
 ## Limitations
 
 - no match across lines
