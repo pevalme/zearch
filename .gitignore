@@ -1,0 +1,6 @@
+# Build artifacts
+zearch
+debug
+stats
+plot
+src/*.o
