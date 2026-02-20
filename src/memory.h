@@ -30,7 +30,13 @@
 #include "types.h"
 
 #define MAX_PREALLOCATED 32768
-#define BLOCKS_LENGTH 1
+/*
+ * Initial capacity of the block-pointer array in the custom PAIR allocator.
+ * The old value (1) caused a realloc() every time a new 32 KB PAIR block was
+ * needed.  Starting at 64 avoids all early reallocations for grammars with up
+ * to 64 × 32 768 ≈ 2 M pairs, at a one-time cost of only 512 B upfront.
+ */
+#define BLOCKS_LENGTH 64
 
 typedef struct {
 	short num_blocks; // Number of blocks used.

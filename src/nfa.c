@@ -61,14 +61,14 @@
 extern GRAMMAR_RULE *grammar;
 extern TRANSITION_FULL *automaton;
 extern TRANSITION_SEQ *automaton_seq;
-extern int recently_added[MAX_REGEX_SIZE][MAX_REGEX_SIZE];
+extern int *recently_added; // compact num_states*num_states array, indexed [i*num_states+f]
 extern int reached_states[MAX_REGEX_SIZE];
 extern int reached_states2[MAX_REGEX_SIZE];
 extern short list_dots[MAX_REGEX_SIZE];
 extern short dots[MAX_REGEX_SIZE];
 extern short final_states[MAX_REGEX_SIZE];
 extern short num_edges[MAX_REGEX_SIZE];
-extern short edges[MAX_REGEX_SIZE][MAX_REGEX_SIZE]; // edges[q] is the list of states reachable from q
+extern short *edges; // compact num_states*num_states array, indexed [q*num_states+k]
 extern int *frequencies;
 extern int *rs;
 extern int *rs2;
@@ -133,7 +133,7 @@ void add_edge(short i, short f){
 	total_num_edges++;
 #endif
 
-	recently_added[i][f] = rule;
+	recently_added[(int)i * num_states + (int)f] = rule;
 
 	if (trule.is_there == 0) { // First edge with label=rule
 		DEBUG_PRINT("First time symbol is added\n");
@@ -142,6 +142,8 @@ void add_edge(short i, short f){
 			memory_malloc(&block, &index);
 			trule.first_block = block;
 			trule.first_index = index;
+			trule.last_block = block;   // tail == head on first node
+			trule.last_index = index;
 			iter = memory_get(block, index);
 			iter->initial[0] = i;
 			iter->final[0] = f;
@@ -168,6 +170,8 @@ void add_edge(short i, short f){
 				memory_malloc(&block, &index);
 				trule.first_block = block;
 				trule.first_index = index;
+				trule.last_block = block;
+				trule.last_index = index;
 				iter = memory_get(block, index);
 				iter->initial[0] = i;
 				iter->final[0] = f;
@@ -177,14 +181,21 @@ void add_edge(short i, short f){
 				used_pointers++;
 #endif
 			} else {
-				iter = memory_get(trule.first_block, trule.first_index);
-				while (iter->next_block != -1) iter = memory_get(iter->next_block, iter->next_index);
+				/*
+				 * O(1) tail access: jump directly to the last node using the
+				 * cached last_block/last_index pointer instead of traversing
+				 * the full list.  Previously this was an O(n) while-loop walk.
+				 */
+				iter = memory_get(trule.last_block, trule.last_index);
 
 				if (iter->initial[1] == 0 && iter->final[1] == 0) {
 					iter->initial[1] = i;
 					iter->final[1] = f;
+					/* last_block/last_index unchanged — still pointing to the same tail node */
 				} else {
 					memory_malloc(&(iter->next_block), &(iter->next_index));
+					trule.last_block = iter->next_block;  // advance tail
+					trule.last_index = iter->next_index;
 					iter = memory_get(iter->next_block, iter->next_index);
 					iter->initial[0] = i;
 					iter->final[0] = f;
@@ -202,6 +213,8 @@ void add_edge(short i, short f){
 				memory_malloc(&block, &index);
 				trule.first_block = block;
 				trule.first_index = index;
+				trule.last_block = block;
+				trule.last_index = index;
 				iter = memory_get(block, index);
 				iter->initial[0] = i;
 				iter->final[0] = f;
@@ -242,6 +255,8 @@ void add_edge_direct(short i, short f){
 			memory_malloc(&block, &index);
 			automaton[rule].first_block = block;
 			automaton[rule].first_index = index;
+			automaton[rule].last_block = block;
+			automaton[rule].last_index = index;
 			iter = memory_get(block, index);
 			iter->initial[0] = i;
 			iter->final[0] = f;
@@ -265,6 +280,8 @@ void add_edge_direct(short i, short f){
 				memory_malloc(&block, &index);
 				automaton[rule].first_block = block;
 				automaton[rule].first_index = index;
+				automaton[rule].last_block = block;
+				automaton[rule].last_index = index;
 				iter = memory_get(block, index);
 				iter->initial[0] = i;
 				iter->final[0] = f;
@@ -274,18 +291,20 @@ void add_edge_direct(short i, short f){
 				used_pointers++;
 #endif
 			} else {
-				iter = memory_get(automaton[rule].first_block, automaton[rule].first_index);
-				while (iter->next_block != -1) iter = memory_get(iter->next_block, iter->next_index);
+				/* O(1) tail access — no list traversal needed */
+				iter = memory_get(automaton[rule].last_block, automaton[rule].last_index);
 
 				if (iter->initial[1] == 0 && iter->final[1] == 0) {
 					iter->initial[1] = i;
 					iter->final[1] = f;
 				} else {
 					memory_malloc(&(iter->next_block), &(iter->next_index));
+					automaton[rule].last_block = iter->next_block;
+					automaton[rule].last_index = iter->next_index;
 					iter = memory_get(iter->next_block, iter->next_index);
 					iter->initial[0] = i;
 					iter->final[0] = f;
-					recently_added[i][f] = rule;
+					recently_added[(int)i * num_states + (int)f] = rule;
 					iter->next_block = -1;
 					iter->next_index = -1;
 #ifdef STATS
@@ -304,6 +323,8 @@ void add_edge_direct(short i, short f){
 				memory_malloc(&block, &index);
 				automaton[rule].first_block = block;
 				automaton[rule].first_index = index;
+				automaton[rule].last_block = block;
+				automaton[rule].last_index = index;
 				iter = memory_get(block, index);
 				iter->initial[0] = i;
 				iter->final[0] = f;
@@ -379,19 +400,19 @@ void add_rule(){
 		if (tleft.new_lines) {
 			iterate_right(it, \
 				if (tright.initial[it] == 0 && !final_states[tright.final[it]]){ \
-					if (recently_added[0][tright.final[it]] != rule) add_edge(0,tright.final[it]); \
+					if (recently_added[0 * num_states + (int)(tright.final[it])] != rule) add_edge(0,tright.final[it]); \
 				}, \
 				if (pright.initial[it] == 0 && !final_states[pright.final[it]]){ \
-					if (recently_added[0][pright.final[it]] != rule) add_edge(0,pright.final[it]); \
+					if (recently_added[0 * num_states + (int)(pright.final[it])] != rule) add_edge(0,pright.final[it]); \
 				} \
 			)
 		} else {
 			iterate_right(it, \
 				if (dots[tright.initial[it]] && (tright.initial[it] != 0 || !final_states[tright.final[it]])){ \
-					if (recently_added[tright.initial[it]][tright.final[it]] != rule) add_edge(tright.initial[it],tright.final[it]); \
+					if (recently_added[(int)(tright.initial[it]) * num_states + (int)(tright.final[it])] != rule) add_edge(tright.initial[it],tright.final[it]); \
 				}, \
 				if (dots[pright.initial[it]] && (pright.initial[it] != 0 || !final_states[pright.final[it]])){ \
-					if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
+					if (recently_added[(int)(pright.initial[it]) * num_states + (int)(pright.final[it])] != rule) add_edge(pright.initial[it],pright.final[it]); \
 				} \
 			)
 	}
@@ -409,24 +430,24 @@ void add_rule(){
 		#endif
 		if (tleft.new_lines) {
 			iterate_right(it, \
-				edges[tright.initial[it]][num_edges[tright.initial[it]]++] = tright.final[it]; \
+				edges[(int)(tright.initial[it]) * num_states + num_edges[tright.initial[it]]++] = tright.final[it]; \
 				if (tright.initial[it] == 0 && !final_states[tright.final[it]]){ \
-					if (recently_added[tright.initial[it]][tright.final[it]] != rule) add_edge(tright.initial[it],tright.final[it]); \
+					if (recently_added[(int)(tright.initial[it]) * num_states + (int)(tright.final[it])] != rule) add_edge(tright.initial[it],tright.final[it]); \
 				}, \
-				edges[pright.initial[it]][num_edges[pright.initial[it]]++] = pright.final[it]; \
+				edges[(int)(pright.initial[it]) * num_states + num_edges[pright.initial[it]]++] = pright.final[it]; \
 				if (pright.initial[it] == 0 && !final_states[pright.final[it]]){ \
-					if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
+					if (recently_added[(int)(pright.initial[it]) * num_states + (int)(pright.final[it])] != rule) add_edge(pright.initial[it],pright.final[it]); \
 				} \
 			)
 		} else {
 			iterate_right(it, \
-				edges[tright.initial[it]][num_edges[tright.initial[it]]++] = tright.final[it]; \
+				edges[(int)(tright.initial[it]) * num_states + num_edges[tright.initial[it]]++] = tright.final[it]; \
 				if (dots[tright.initial[it]] && (tright.initial[it] != 0 || !final_states[tright.final[it]])){ \
-					if (recently_added[tright.initial[it]][tright.final[it]] != rule) add_edge(tright.initial[it],tright.final[it]); \
+					if (recently_added[(int)(tright.initial[it]) * num_states + (int)(tright.final[it])] != rule) add_edge(tright.initial[it],tright.final[it]); \
 				}, \
-				edges[pright.initial[it]][num_edges[pright.initial[it]]++] = pright.final[it]; \
+				edges[(int)(pright.initial[it]) * num_states + num_edges[pright.initial[it]]++] = pright.final[it]; \
 				if (dots[pright.initial[it]] && (pright.initial[it] != 0 || !final_states[pright.final[it]])){ \
-					if (recently_added[pright.initial[it]][pright.final[it]] != rule) add_edge(pright.initial[it],pright.final[it]); \
+					if (recently_added[(int)(pright.initial[it]) * num_states + (int)(pright.final[it])] != rule) add_edge(pright.initial[it],pright.final[it]); \
 				} \
 			)
 		}
@@ -438,26 +459,26 @@ void add_rule(){
 		iterate_left(it, \
 			if (dots[tleft.final[it]] && (final_states[tleft.final[it]] || tright.new_lines == 0)){ \
 				if (tleft.initial[it] != 0 || !final_states[tleft.final[it]]) { \
-					if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
+					if (recently_added[(int)(tleft.initial[it]) * num_states + (int)(tleft.final[it])] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
 				} \
 			} \
 			for (i = 0; i < num_edges[tleft.final[it]]; i++) { \
-				if (tleft.initial[it] == 0 && final_states[edges[tleft.final[it]][i]]) { \
+				if (tleft.initial[it] == 0 && final_states[edges[(int)(tleft.final[it]) * num_states + i]]) { \
 					mid |= (tleft.final[it] && !final_states[tleft.final[it]]); \
 				} else {\
-					if (recently_added[tleft.initial[it]][edges[tleft.final[it]][i]] != rule) add_edge(tleft.initial[it], edges[tleft.final[it]][i]); \
+					if (recently_added[(int)(tleft.initial[it]) * num_states + (int)(edges[(int)(tleft.final[it]) * num_states + i])] != rule) add_edge(tleft.initial[it], edges[(int)(tleft.final[it]) * num_states + i]); \
 				} \
 			}, \
 			if (dots[pleft.final[it]] && (final_states[pleft.final[it]] || tright.new_lines == 0)){ \
 				if (pleft.initial[it] != 0 || !final_states[pleft.final[it]]) { \
-					if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
+					if (recently_added[(int)(pleft.initial[it]) * num_states + (int)(pleft.final[it])] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
 				} \
 			} \
 			for (i = 0; i < num_edges[pleft.final[it]]; i++) { \
-				if (pleft.initial[it] == 0 && final_states[edges[pleft.final[it]][i]]) { \
+				if (pleft.initial[it] == 0 && final_states[edges[(int)(pleft.final[it]) * num_states + i]]) { \
 					mid |= (pleft.final[it] && !final_states[pleft.final[it]]); \
 				} else {\
-					if (recently_added[pleft.initial[it]][edges[pleft.final[it]][i]] != rule) add_edge(pleft.initial[it], edges[pleft.final[it]][i]); \
+					if (recently_added[(int)(pleft.initial[it]) * num_states + (int)(edges[(int)(pleft.final[it]) * num_states + i])] != rule) add_edge(pleft.initial[it], edges[(int)(pleft.final[it]) * num_states + i]); \
 				} \
 			}
 		)
@@ -474,19 +495,19 @@ void add_rule(){
 	if (tright.new_lines) {
 		iterate_left (it, \
 			if (final_states[tleft.final[it]] && tleft.initial[it] != 0){ \
-				if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
+				if (recently_added[(int)(tleft.initial[it]) * num_states + (int)(tleft.final[it])] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
 			}, \
 			if (final_states[pleft.final[it]] && pleft.initial[it] != 0){ \
-				if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
+				if (recently_added[(int)(pleft.initial[it]) * num_states + (int)(pleft.final[it])] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
 			} \
 		)
 	} else {
 		iterate_left (it, \
 			if (dots[tleft.final[it]] && (tleft.initial[it] != 0 || !final_states[tleft.final[it]])){ \
-				if (recently_added[tleft.initial[it]][tleft.final[it]] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
+				if (recently_added[(int)(tleft.initial[it]) * num_states + (int)(tleft.final[it])] != rule) add_edge(tleft.initial[it],tleft.final[it]); \
 			}, \
 			if (dots[pleft.final[it]] && (pleft.initial[it] != 0 || !final_states[pleft.final[it]])){ \
-				if (recently_added[pleft.initial[it]][pleft.final[it]] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
+				if (recently_added[(int)(pleft.initial[it]) * num_states + (int)(pleft.final[it])] != rule) add_edge(pleft.initial[it],pleft.final[it]); \
 			} \
 		)
 	}

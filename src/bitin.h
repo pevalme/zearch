@@ -28,7 +28,14 @@
 #define BITIN_H_
 
 
-#define BITIN_BUF_LEN 10485760 /* BITIN_BUF_LEN*sizeof(unsigned int) bytes */
+/*
+ * Read-ahead buffer for the bit-stream parser.  The original value (40 MB)
+ * far exceeds what is needed for most grammars and wastes virtual memory.
+ * 1 MB (1048576 × 4 B = 4 MB) is sufficient for compressed files up to
+ * several hundred megabytes; fread() refills the buffer transparently when
+ * it runs dry, so there is no correctness risk in reducing this value.
+ */
+#define BITIN_BUF_LEN 1048576 /* BITIN_BUF_LEN*sizeof(unsigned int) bytes */
 #define W_BITS 32
 #define BYTE_SIZE 256
 #define BITS_PER_BYTE 8
