@@ -6,12 +6,11 @@
 #
 # Date: 18/10/2018
 
-# Variables to be set by the user
 ZSTD="zstd"
-LZ4="../../../lz4/lz4"
-COMPRESS="../../../code/compress"
-REPAIR="../../../Re-Pair/repair110811/repair"
-GZIP="../../../gzip-1.9/gzip"
+LZ4="lz4"
+COMPRESS="compress"
+REPAIR="../repair110811/repair"
+GZIP="gzip"
 
 # Variables for the script. Modify them on your own responsibility
 BLUE="\033[0;34m"
@@ -19,15 +18,23 @@ NC="\033[0m" # No Color
 
 RANDOM=0 # Set to 1 to generate random files. Not used for the final experiments.
 
+# Quick mode: pass --quick to skip files larger than 100KB (for testing).
+QUICK=0
+if [[ "${1:-}" == "--quick" ]]; then
+	QUICK=1
+fi
+
 split_and_compress() {
-	dd if=original.txt of=original500MB.txt bs=500 count=1048576
-	dd if=original.txt of=original250MB.txt bs=250 count=1048576
-	dd if=original.txt of=original100MB.txt bs=100 count=1048576
-	dd if=original.txt of=original50MB.txt bs=50 count=1048576
-	dd if=original.txt of=original25MB.txt bs=25 count=1048576
-	dd if=original.txt of=original10MB.txt bs=10 count=1048576
-	dd if=original.txt of=original5MB.txt bs=5 count=1048576
-	dd if=original.txt of=original1MB.txt bs=1 count=1048576
+	if [[ $QUICK == 0 ]]; then
+		dd if=original.txt of=original500MB.txt bs=500 count=1048576
+		dd if=original.txt of=original250MB.txt bs=250 count=1048576
+		dd if=original.txt of=original100MB.txt bs=100 count=1048576
+		dd if=original.txt of=original50MB.txt bs=50 count=1048576
+		dd if=original.txt of=original25MB.txt bs=25 count=1048576
+		dd if=original.txt of=original10MB.txt bs=10 count=1048576
+		dd if=original.txt of=original5MB.txt bs=5 count=1048576
+		dd if=original.txt of=original1MB.txt bs=1 count=1048576
+	fi
 	dd if=original.txt of=original100KB.txt bs=1 count=102400
 	dd if=original.txt of=original75KB.txt bs=1 count=76800
 	dd if=original.txt of=original50KB.txt bs=5 count=10240
@@ -37,14 +44,16 @@ split_and_compress() {
 
 	rm original.txt
 
-	$ZSTD -k -f --ultra -22 original500MB.txt
-	$ZSTD -k -f --ultra -22 original250MB.txt
-	$ZSTD -k -f --ultra -22 original100MB.txt
-	$ZSTD -k -f --ultra -22 original50MB.txt
-	$ZSTD -k -f --ultra -22 original25MB.txt
-	$ZSTD -k -f --ultra -22 original10MB.txt
-	$ZSTD -k -f --ultra -22 original5MB.txt
-	$ZSTD -k -f --ultra -22 original1MB.txt
+	if [[ $QUICK == 0 ]]; then
+		$ZSTD -k -f --ultra -22 original500MB.txt
+		$ZSTD -k -f --ultra -22 original250MB.txt
+		$ZSTD -k -f --ultra -22 original100MB.txt
+		$ZSTD -k -f --ultra -22 original50MB.txt
+		$ZSTD -k -f --ultra -22 original25MB.txt
+		$ZSTD -k -f --ultra -22 original10MB.txt
+		$ZSTD -k -f --ultra -22 original5MB.txt
+		$ZSTD -k -f --ultra -22 original1MB.txt
+	fi
 	$ZSTD -k -f --ultra -22 original100KB.txt
 	$ZSTD -k -f --ultra -22 original75KB.txt
 	$ZSTD -k -f --ultra -22 original50KB.txt
@@ -52,14 +61,16 @@ split_and_compress() {
 	$ZSTD -k -f --ultra -22 original10KB.txt
 	$ZSTD -k -f --ultra -22 original1KB.txt
 
-	$LZ4 -f -9 -k -m original500MB.txt
-	$LZ4 -f -9 -k -m original250MB.txt
-	$LZ4 -f -9 -k -m original100MB.txt
-	$LZ4 -f -9 -k -m original50MB.txt
-	$LZ4 -f -9 -k -m original25MB.txt
-	$LZ4 -f -9 -k -m original10MB.txt
-	$LZ4 -f -9 -k -m original5MB.txt
-	$LZ4 -f -9 -k -m original1MB.txt
+	if [[ $QUICK == 0 ]]; then
+		$LZ4 -f -9 -k -m original500MB.txt
+		$LZ4 -f -9 -k -m original250MB.txt
+		$LZ4 -f -9 -k -m original100MB.txt
+		$LZ4 -f -9 -k -m original50MB.txt
+		$LZ4 -f -9 -k -m original25MB.txt
+		$LZ4 -f -9 -k -m original10MB.txt
+		$LZ4 -f -9 -k -m original5MB.txt
+		$LZ4 -f -9 -k -m original1MB.txt
+	fi
 	$LZ4 -f -9 -k -m original100KB.txt
 	$LZ4 -f -9 -k -m original75KB.txt
 	$LZ4 -f -9 -k -m original50KB.txt
@@ -67,14 +78,16 @@ split_and_compress() {
 	$LZ4 -f -9 -k -m original10KB.txt
 	$LZ4 -f -9 -k -m original1KB.txt
 
-	$GZIP -f -9 -k -m original500MB.txt
-	$GZIP -f -9 -k -m original250MB.txt
-	$GZIP -f -9 -k -m original100MB.txt
-	$GZIP -f -9 -k -m original50MB.txt
-	$GZIP -f -9 -k -m original25MB.txt
-	$GZIP -f -9 -k -m original10MB.txt
-	$GZIP -f -9 -k -m original5MB.txt
-	$GZIP -f -9 -k -m original1MB.txt
+	if [[ $QUICK == 0 ]]; then
+		$GZIP -f -9 -k -m original500MB.txt
+		$GZIP -f -9 -k -m original250MB.txt
+		$GZIP -f -9 -k -m original100MB.txt
+		$GZIP -f -9 -k -m original50MB.txt
+		$GZIP -f -9 -k -m original25MB.txt
+		$GZIP -f -9 -k -m original10MB.txt
+		$GZIP -f -9 -k -m original5MB.txt
+		$GZIP -f -9 -k -m original1MB.txt
+	fi
 	$GZIP -f -9 -k -m original100KB.txt
 	$GZIP -f -9 -k -m original75KB.txt
 	$GZIP -f -9 -k -m original50KB.txt
@@ -82,30 +95,32 @@ split_and_compress() {
 	$GZIP -f -9 -k -m original10KB.txt
 	$GZIP -f -9 -k -m original1KB.txt
 
-	cp original500MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original500MB.txt.Z
-	cp original250MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original250MB.txt.Z
-	cp original100MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original100MB.txt.Z
-	cp original50MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original50MB.txt.Z
-	cp original25MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original25MB.txt.Z
-	cp original10MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original10MB.txt.Z
-	cp original5MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original5MB.txt.Z
-	cp original1MB.txt a.txt
-	$COMPRESS a.txt
-	mv a.txt.Z original1MB.txt.Z
+	if [[ $QUICK == 0 ]]; then
+		cp original500MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original500MB.txt.Z
+		cp original250MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original250MB.txt.Z
+		cp original100MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original100MB.txt.Z
+		cp original50MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original50MB.txt.Z
+		cp original25MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original25MB.txt.Z
+		cp original10MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original10MB.txt.Z
+		cp original5MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original5MB.txt.Z
+		cp original1MB.txt a.txt
+		$COMPRESS a.txt
+		mv a.txt.Z original1MB.txt.Z
+	fi
 	cp original100KB.txt a.txt
 	$COMPRESS a.txt
 	mv a.txt.Z original100KB.txt.Z
@@ -125,14 +140,16 @@ split_and_compress() {
 	$COMPRESS a.txt
 	mv a.txt.Z original1KB.txt.Z
 
-	$REPAIR original500MB.txt
-	$REPAIR original250MB.txt
-	$REPAIR original100MB.txt
-	$REPAIR original50MB.txt
-	$REPAIR original25MB.txt
-	$REPAIR original10MB.txt
-	$REPAIR original5MB.txt
-	$REPAIR original1MB.txt
+	if [[ $QUICK == 0 ]]; then
+		$REPAIR original500MB.txt
+		$REPAIR original250MB.txt
+		$REPAIR original100MB.txt
+		$REPAIR original50MB.txt
+		$REPAIR original25MB.txt
+		$REPAIR original10MB.txt
+		$REPAIR original5MB.txt
+		$REPAIR original1MB.txt
+	fi
 	$REPAIR original100KB.txt
 	$REPAIR original75KB.txt
 	$REPAIR original50KB.txt
@@ -195,9 +212,9 @@ echo -e "$BLUE============== Preparing Subtitles files ==============$NC"
 mkdir -p subs
 cd subs
 
-wget -q http://opus.nlpl.eu/download.php?f=OpenSubtitles2016/mono/OpenSubtitles2016.en.gz
-zcat download.php\?f\=OpenSubtitles2016%2Fmono%2FOpenSubtitles2016.en.gz > subs.txt
-rm download.php\?f\=OpenSubtitles2016%2Fmono%2FOpenSubtitles2016.en.gz
+wget -q -O OpenSubtitles2018.en.txt.gz "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/mono/en.txt.gz"
+zcat OpenSubtitles2018.en.txt.gz > subs.txt
+rm OpenSubtitles2018.en.txt.gz
 
 echo "Data downloaded!!"
 
@@ -218,28 +235,16 @@ echo -e "$BLUE============== Preparing Books files ==============$NC"
 mkdir -p gutenberg
 cd gutenberg
 
-echo "Checkinf for some python libraries to download from google drive"
-REQ=$(pip list 2> /dev/null | grep -c "requests")
-if [[ $REQ -eq 0 ]]
-then
-	echo "Python library requests required"
-	pip install --user requests
-fi
-echo "done"
-echo "Downloading books from Gutenberg Dataset..."
+echo "Downloading books from Gutenberg Dataset (Zenodo record 3360392)..."
 echo "This may take a while..."
-../download_gdrive.py 0B2Mzhc7popBga2RkcWZNcjlRTGM gutenberg.zip
-unzip -u gutenberg.zip
-cd Gutenberg/txt
-../../../extract_books.sh
-mv gutenberg.txt ../../
-cd ../../
+wget -q -O gutenberg.zip "https://zenodo.org/api/records/3360392/files/D1.7GB.zip/content"
+unzip -q gutenberg.zip -d gutenberg_texts
 
 echo "Data downloaded!!"
 
-iconv --to-code US-ASCII -c gutenberg.txt > tmp.txt 
-rm gutenberg.txt
-tr -d '\r' < tmp.txt > original.txt
+find gutenberg_texts -name "*.txt" -exec cat {} + > tmp.txt
+rm -rf gutenberg_texts gutenberg.zip
+tr -d '\r' < tmp.txt | iconv --to-code US-ASCII -c > original.txt
 rm tmp.txt
 
 echo "Generating files of different sizes and compressing them"
