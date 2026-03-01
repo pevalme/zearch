@@ -50,14 +50,27 @@
 GRAMMAR_RULE *grammar = NULL;
 TRANSITION_FULL *automaton = NULL;
 TRANSITION_SEQ *automaton_seq = NULL;
-int recently_added[MAX_REGEX_SIZE][MAX_REGEX_SIZE] __attribute__ ((aligned)) = {{0}};
-int reached_states[MAX_REGEX_SIZE] __attribute__ ((aligned)) = {0};
-int reached_states2[MAX_REGEX_SIZE] __attribute__ ((aligned)) = {0};
-short list_dots[MAX_REGEX_SIZE] __attribute__ ((aligned)) = {0};
-short dots[MAX_REGEX_SIZE] __attribute__ ((aligned)) = {0};
-short final_states[MAX_REGEX_SIZE] __attribute__ ((aligned)) = {0};
-short num_edges[MAX_REGEX_SIZE] __attribute__ ((aligned));
-short edges[MAX_REGEX_SIZE][MAX_REGEX_SIZE] __attribute__ ((aligned)) = {{0}}; // edges[q] is the list of states reachable from q
+/*
+ * recently_added[i*num_states+f] == rule means edge (i->f) was already added
+ * for the current rule. Dynamically allocated as num_states x num_states to
+ * minimise the working set: for a 20-state NFA this drops from 4 MB (the
+ * static MAX_REGEX_SIZE^2 int array) to 1.6 KB, fitting entirely in L1 cache.
+ */
+int *recently_added = NULL;
+int reached_states[MAX_REGEX_SIZE] __attribute__ ((aligned(64))) = {0};
+int reached_states2[MAX_REGEX_SIZE] __attribute__ ((aligned(64))) = {0};
+short list_dots[MAX_REGEX_SIZE] __attribute__ ((aligned(64))) = {0};
+short dots[MAX_REGEX_SIZE] __attribute__ ((aligned(64))) = {0};
+short final_states[MAX_REGEX_SIZE] __attribute__ ((aligned(64))) = {0};
+short num_edges[MAX_REGEX_SIZE] __attribute__ ((aligned(64)));
+/*
+ * edges[q*num_states + k] holds the k-th destination reachable from state q
+ * via right-side transitions (used as a temporary adjacency list in add_rule).
+ * Dynamically allocated as num_states x num_states to keep the working set
+ * small (e.g. 800 B for a 20-state NFA vs 2 MB for the static MAX_REGEX_SIZE^2
+ * short array).
+ */
+short *edges = NULL;
 int *rs = NULL;
 int *rs2 = NULL;
 MEMORY mem; // Keeps track of allocated memory
@@ -71,7 +84,8 @@ int num_dots = 0; // Number of dot states
 int rule, left, right; // Rule under study
 TRANSITION_FULL tleft, tright, trule; // Automaton elements related to rules under study
 TRANSITION_SEQ tsleft, tsright, tsrule; // Automaton elements related to rules under study
-TRANSITION_FULL tempty = {0};
+/* Sentinel: -1 for first_block/first_index/last_block/last_index signals "none". */
+TRANSITION_FULL tempty = {.first_block = -1, .first_index = -1, .last_block = -1, .last_index = -1};
 TRANSITION_SEQ tsempty = {0};
 int axiom; // Identifier of the axiom
 int num_states = 0; // Number of states of the NFA
@@ -251,6 +265,26 @@ int has_meaniningfull_trans(struct state *st) {
 	return false;
 }
 
+/*
+ * Count the number of states in the NFA produced by compiling `regex`.
+ * The FA is compiled (and optionally minimized) then immediately freed.
+ * This lets callers allocate compact, num_states-sized working arrays before
+ * the full automaton initialisation runs, which keeps the hot-path arrays
+ * small enough to fit in L1/L2 cache.
+ */
+static int count_nfa_states(bool minimize, char *regex) {
+	struct fa *fa_result = NULL;
+	struct state *st;
+	int count = 0;
+
+	fa_compile(regex, strlen(regex), &fa_result);
+	if (minimize) fa_minimize(fa_result);
+	st = fa_state_initial(fa_result);
+	while (st != NULL) { count++; st = fa_state_next(st); }
+	fa_free(fa_result);
+	return count;
+}
+
 void initialize_automaton(bool minimize, char *regex) {
 	struct state * hashes[MAX_REGEX_SIZE] = {0};
 	struct fa* fa_result = NULL;
@@ -335,6 +369,7 @@ void initialize_automaton(bool minimize, char *regex) {
 
 int allocate_data_structures(int seq_len, int minimize, char *regex_str) {
 	int i;
+	int expected_states;
 
 	axiom = num_rules + seq_len - 2;
 
@@ -368,6 +403,28 @@ int allocate_data_structures(int seq_len, int minimize, char *regex_str) {
 	avg.value = 0;
 	avg.sample = 0;
 #endif
+
+	/*
+	 * Pre-count NFA states so we can allocate recently_added and edges as
+	 * compact num_states×num_states arrays.  For a typical regex with N states
+	 * (N << MAX_REGEX_SIZE=1024) this shrinks these hot-path arrays from
+	 *   4 MB  (int  [1024][1024]) + 2 MB (short[1024][1024])
+	 * down to
+	 *   4*N*N bytes + 2*N*N bytes
+	 * which, for N=20 states, is ~2.4 KB total — fitting entirely in L1 cache.
+	 * The one-time cost of compiling the regex a second time is negligible.
+	 */
+	expected_states = count_nfa_states(minimize, regex_str);
+	recently_added = (int *)calloc((size_t)expected_states * expected_states, sizeof(int));
+	if (recently_added == NULL) {
+		printf("Too much memory\n");
+		return -4;
+	}
+	edges = (short *)calloc((size_t)expected_states * expected_states, sizeof(short));
+	if (edges == NULL) {
+		printf("Too much memory\n");
+		return -5;
+	}
 
 	initialize_automaton(minimize, regex_str);
 
@@ -507,6 +564,8 @@ FREE_AND_EXIT:
 	print_stats(seq_len);
 #endif
 
+	free(recently_added);
+	free(edges);
 	free(bitin->buftop);
 	free(bitin);
 	fclose(slp);
@@ -694,6 +753,8 @@ int run_zearch(bool minimize, char *slp_filename, char *regex_str){
 	free(automaton);
 	if (mode != 'c') free(automaton_seq);
 	if (mode != 'c') free(grammar);
+	free(recently_added);
+	free(edges);
 
 	free(bitin->buftop);
 	free(bitin);

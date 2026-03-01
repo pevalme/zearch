@@ -44,6 +44,15 @@ typedef struct {
 	unsigned char final[NUM_PAIRS_INITIAL];
 	short first_block;
 	short first_index;
+	/*
+	 * Tail pointer for the overflow linked list (used when state indices
+	 * exceed SMALL_REGEX_BOUND=255).  Keeping a direct reference to the
+	 * last PAIR node in the chain reduces add_edge() insertion from O(n)
+	 * list traversal to O(1).  Initialised to -1 (same sentinel as
+	 * first_block/first_index) when no overflow list exists.
+	 */
+	short last_block;
+	short last_index;
 	unsigned int count : 25; // This allow us to count, easily, up to 2**24 = 16777216
 	unsigned char new_lines : 1; // Can be 0, 1 or 2
 	unsigned char is_there : 1;
