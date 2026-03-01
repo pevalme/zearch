@@ -6,10 +6,11 @@
 #   - Build tools: gcc, make
 #   - libfa (via libaugeas-dev) – NFA library required to compile zearch
 #   - Compression tools: zstd, lz4, gzip, ncompress
-#   - Search baselines: ripgrep, grep
-#   - Data tools: wget, unzip, iconv, m4, python3, pip
+#   - Search baselines: ripgrep, grep, libhyperscan-dev
+#   - Data tools: wget, unzip, m4, python3, pip
 #   - Python library: requests (for download_gdrive.py)
 #   - Re-Pair compressor (built from source – not available in apt)
+#   - graphs/hyperscan binary (built from source using libhyperscan)
 
 set -euo pipefail
 
@@ -38,6 +39,7 @@ sudo apt-get install -y \
     gcc \
     make \
     libaugeas-dev \
+    libhyperscan-dev \
     zstd \
     lz4 \
     gzip \
@@ -68,6 +70,7 @@ ok "Python requests installed."
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ZEARCH_DIR="$(dirname "$SCRIPT_DIR")"
 REPAIR_URL="https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/re-pair/repair110811.tar.gz"
 REPAIR_ARCHIVE="repair110811.tar.gz"
 REPAIR_DIR="$SCRIPT_DIR/repair110811"
@@ -93,10 +96,28 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Build zearch
+# 4. Build graphs/hyperscan – line-counting Hyperscan baseline binary
 # ---------------------------------------------------------------------------
 
-ZEARCH_DIR="$(dirname "$SCRIPT_DIR")"
+HYPERSCAN_SRC="$ZEARCH_DIR/graphs/hyperscan.c"
+HYPERSCAN_BIN="$ZEARCH_DIR/graphs/hyperscan"
+
+if [[ -x "$HYPERSCAN_BIN" ]]; then
+    ok "graphs/hyperscan already built – skipping."
+else
+    info "Building graphs/hyperscan..."
+    gcc -O2 -o "$HYPERSCAN_BIN" "$HYPERSCAN_SRC" -lhs
+
+    if [[ -x "$HYPERSCAN_BIN" ]]; then
+        ok "graphs/hyperscan built successfully."
+    else
+        error "graphs/hyperscan build failed. Check the output above for details."
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Build zearch
+# ---------------------------------------------------------------------------
 
 info "Building zearch..."
 make -C "$ZEARCH_DIR" -s zearch
@@ -114,7 +135,8 @@ fi
 echo ""
 echo "============================================================"
 ok "All tools installed successfully."
-echo "  zearch   : $ZEARCH_DIR/zearch"
-echo "  repair   : $REPAIR_DIR/repair"
-echo "  despair  : $REPAIR_DIR/despair"
+echo "  zearch     : $ZEARCH_DIR/zearch"
+echo "  repair     : $REPAIR_DIR/repair"
+echo "  despair    : $REPAIR_DIR/despair"
+echo "  hyperscan  : $ZEARCH_DIR/graphs/hyperscan"
 echo "============================================================"

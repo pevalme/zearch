@@ -33,6 +33,7 @@ zearch/
 │   ├── stack.h / stack.c  # Resizable integer stack (used to parse grammar from file)
 │   └── bitin.h / bitin.c  # Bit-level file reader (Re-Pair compressed format)
 ├── benchmark/
+│   ├── install_tools.sh   # Installs all dependencies and builds zearch end-to-end
 │   ├── generate_files.sh  # Downloads datasets and produces compressed test files
 │   ├── download_gdrive.py # Helper: download large files from Google Drive
 │   └── extract_books.sh   # Concatenates Project Gutenberg text files
@@ -233,36 +234,83 @@ backreferences, no named character classes, ASCII only).
 
 ## Benchmark Workflow
 
-### Generating Test Files
+### Installing All Tools
 
-The `benchmark/generate_files.sh` script downloads real-world datasets (NASA web
-logs, OpenSubtitles, Project Gutenberg books, Google N-grams, CSV data) and
-produces compressed files of sizes from 1KB to 500MB.
-
-**Required tools** (set paths at top of the script):
-- `zstd` — via `apt-get install zstd`
-- `lz4` — via `apt-get install lz4` (note: script expects `../../../lz4/lz4` by
-  default; update the `LZ4` variable if using system lz4)
-- `repair` — built from source (see above); update the `REPAIR` variable
-- `compress` — classic Unix LZW; update the `COMPRESS` variable (`ncompress` package)
-- `gzip` — standard; update `GZIP` variable
-
-Before running, update the variable paths at the top of `generate_files.sh` to
-match your installation. The script requires ~12 GB of disk space.
+`benchmark/install_tools.sh` installs all dependencies and builds all binaries in
+one step. It must be run from the `benchmark/` directory:
 
 ```bash
 cd benchmark
-# Edit generate_files.sh to set ZSTD, LZ4, COMPRESS, REPAIR, GZIP paths
-bash generate_files.sh
+bash install_tools.sh
 ```
 
-### Running Benchmarks
+This installs system packages via `apt-get`, builds Re-Pair from source into
+`benchmark/repair110811/`, builds `graphs/hyperscan`, and then builds `zearch`.
+No manual path editing is required — all tool paths in the benchmark scripts are
+pre-configured for this repo layout.
 
-Benchmarks compare:
-- `zearch` (direct search on `.rp` files)
-- `{lz4,zstd} -dc file | {grep,rg,hyperscan} -c regex` (decompress + search, possibly in parallel via process substitution)
+### Generating Test Files
 
-The JSON files in `graphs/` contain pre-computed results in the format:
+`benchmark/generate_files.sh` downloads real-world datasets (NASA web logs,
+OpenSubtitles, Project Gutenberg books, Google N-grams, CSV data) and produces
+compressed files (`.rp`, `.zst`, `.lz4`, `.gz`, `.Z`) at sizes from 1KB to 500MB.
+Run it from the `benchmark/` directory. It requires ~12 GB of disk space.
+
+```bash
+cd benchmark
+bash generate_files.sh           # full run (all sizes up to 500MB)
+bash generate_files.sh --quick   # quick run (sizes up to 100KB only, for testing)
+```
+
+The script prompts before downloading. The first prompt downloads the main
+datasets (logs, subtitles, Gutenberg — included in all benchmarks). A second
+prompt downloads the optional extra datasets (JSON, CSV, qwerty).
+
+**Known issues fixed in the current script:**
+
+- `GENERATE_RANDOM` (not `RANDOM`) controls whether random datasets are generated.
+  `RANDOM` is a bash built-in PRNG variable; assigning to it just seeds the
+  generator. The variable is named `GENERATE_RANDOM` to avoid this conflict.
+- CSV dataset: the five Google N-grams `.gz` files are each decompressed
+  individually through a per-file loop rather than passing all files to a single
+  `zcat`. Passing multiple files to `zcat` while `head -c` limits downstream output
+  causes the pipeline to produce empty output (silent SIGPIPE interaction).
+  Each file is piped as `zcat file | iconv | head -c <remaining>` and appended,
+  stopping when 1 GB is accumulated.
+- Random/RandomL datasets: `head -c 524288000` is used instead of
+  `dd bs=10M count=50 iflags=fullblock`, which was unreliable on slow pipes.
+
+### Running Benchmarks and Generating Graphs
+
+`graphs/generate_graphs.sh` runs all benchmarks, writes timing results as JSON
+files in `graphs/`, and produces `graphs/index.html` with embedded D3.js charts.
+Run it from the `graphs/` directory:
+
+```bash
+cd graphs
+bash generate_graphs.sh                       # all file types, all sizes
+bash generate_graphs.sh --small               # sizes up to 1MB only
+bash generate_graphs.sh --types logs,subs     # specific file types only
+bash generate_graphs.sh --small --types csv   # combine flags
+```
+
+Available `--types` values: `subs`, `gutenberg`, `csv`, `logs`, `qwerty`, `all`.
+
+`graphs/generate_table.sh` is an alternative that runs a smaller fixed benchmark
+(files up to 100KB) and also records compression ratios and decompression speeds:
+
+```bash
+cd graphs
+bash generate_table.sh
+```
+
+Both scripts expect:
+- `../zearch` at the project root
+- `../benchmark/repair110811/repair` and `despair`
+- `../benchmark/{logs,subs,gutenberg,...}/original*.txt` from `generate_files.sh`
+- `./hyperscan` in the `graphs/` directory
+
+The JSON result format is:
 ```json
 [
   {
@@ -277,16 +325,8 @@ The JSON files in `graphs/` contain pre-computed results in the format:
 ```
 
 Each file is named `{SIZE}{DATASET}.json` (e.g., `100KBLogs.json`) or
-`{SIZE}{DATASET}_cactus.json` for cactus-plot format.
-
-### Generating HTML Graphs
-
-```bash
-cd graphs
-bash generate_table.sh
-```
-
-This produces an `index.html` with embedded D3.js charts. The live version is at
+`{SIZE}{DATASET}_cactus.json` for cactus-plot format. The live version of the
+pre-computed results is at
 [pevalme.github.io/zearch/graphs/index.html](https://pevalme.github.io/zearch/graphs/index.html).
 
 ---

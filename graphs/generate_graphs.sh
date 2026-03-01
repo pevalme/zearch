@@ -6,18 +6,18 @@
 #
 # Date: 19/10/2018
 
-RG="../../ripgrep-0.10.0-x86_64-unknown-linux-musl/rg"
-REPAIR="../../Re-Pair/repair110811/repair"
-DESPAIR="../../Re-Pair/repair110811/despair"
-GREP="../../grep-3.3/src/grep"
+RG="rg"
+REPAIR="../benchmark/repair110811/repair"
+DESPAIR="../benchmark/repair110811/despair"
+GREP="grep"
 ZEARCH="../zearch"
 HYPERSCAN="./hyperscan"
-LZ4="../../lz4/lz4"
-ZSTD="../../zstd/zstd"
+LZ4="lz4"
+ZSTD="zstd"
 NAVARRO="../../code/search"
 LZGREP="../../lzgrep/lzgrep"
-LZW="../../code/compress"
-GZIP="../../gzip-1.9/gzip"
+LZW="compress"
+GZIP="gzip"
 COUNTER=0
 TOCACTUS="./cactus_plot.py"
 STATS_COUNTER=0
@@ -27,18 +27,71 @@ INDEX="index.html"
 TMP="tmp.txt"
 STATS_SCRIPT="./statistics.py"
 
+# ---------------------------------------------------------------------------
+# Command-line options
+# ---------------------------------------------------------------------------
+SMALL_ONLY=0    # When 1, only process files up to 1MB
+FILE_TYPES="all" # Comma-separated list of file types, or "all"
+
+usage() {
+	echo "Usage: $0 [--small] [--types <type1,type2,...>]" >&2
+	echo "  --small, -s          Only generate graphs for files up to 1MB" >&2
+	echo "  --types, -t <list>   Comma-separated list of file types to process." >&2
+	echo "                       Options: subs, gutenberg, csv, logs, qwerty, all (default: all)" >&2
+	exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--small|-s)
+			SMALL_ONLY=1
+			shift
+			;;
+		--types|-t)
+			[[ -z "$2" ]] && usage
+			FILE_TYPES="$2"
+			shift 2
+			;;
+		-h|--help)
+			usage
+			;;
+		*)
+			echo "Unknown option: $1" >&2
+			usage
+			;;
+	esac
+done
+
+# File sizes to benchmark
+if [[ $SMALL_ONLY == 1 ]]; then
+	SIZES=(1KB 10KB 25KB 50KB 75KB 100KB 1MB)
+else
+	SIZES=(1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB)
+fi
+
+# Returns 0 (true) if the given type should be processed given FILE_TYPES
+should_run_type() {
+	local type="$1"
+	[[ "$FILE_TYPES" == "all" ]] && return 0
+	IFS=',' read -ra types <<< "$FILE_TYPES"
+	for t in "${types[@]}"; do
+		[[ "$t" == "$type" ]] && return 0
+	done
+	return 1
+}
+
 # args: regex for rg, regex for zearch, regex por grep input (compress .rp)
 run_simple_case() {
 	COUNTER=$((COUNTER+1))
 	echo "\"Regex\": \"r$COUNTER\"," >> $JSON
 
 	TIMEOUT="timeout 20"
-	RGTO=0
-	GTO=0
-	LZTO=0
-	NTO=0
-	NSF=0
-	HTO=0
+	RGTO=0  # 1 if ripgrep timed out (exit code 124); fills placeholder values instead of measuring
+	GTO=0   # 1 if grep timed out; skips all grep/zgrep measurements for this regex
+	LZTO=0  # 1 if lzgrep timed out (reserved for lzgrep support, currently unused)
+	NTO=0   # 1 if Navarro's tool timed out (reserved, currently unused)
+	NSF=0   # 1 if Navarro's tool search failed (reserved, currently unused)
+	HTO=0   # 1 if Hyperscan timed out; fills placeholder values instead of measuring
 
 	BEGIN=$(date +%s%3N)
 	for i in `seq 1 $REPS`; do $ZEARCH -c "$1" $6.rp 2>&1 1>/dev/null; done
@@ -57,7 +110,7 @@ run_simple_case() {
 	if [[ $? == 124 ]]; then HTO=1; MATCHESH=0; fi
 
 	# ZEARCH
-	rm $TMP
+	rm -f $TMP
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
@@ -73,7 +126,7 @@ run_simple_case() {
 	# GREP
 
 	if [[ $GTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 10000 >> $TMP
 			echo 10000 >> zgrep_lz4.txt
@@ -91,7 +144,7 @@ run_simple_case() {
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
@@ -105,7 +158,7 @@ run_simple_case() {
 		echo "\"zgrep_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
@@ -119,7 +172,7 @@ run_simple_case() {
 		echo "\"zgrep_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $GREP -c "$3" "$6"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $GREP -c "$3" "$6"
 		LC_ALL=C $GREP -c "$3" "$6"
 		LC_ALL=C $GREP -c "$3" "$6"
@@ -136,7 +189,7 @@ run_simple_case() {
 	# HYPERSCAN
 
 	if [[ $HTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 20000 >> $TMP
 			echo 20000 >> hyperscan.txt
@@ -147,7 +200,7 @@ run_simple_case() {
 		echo "\"zhs_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $HYPERSCAN "$1.*$" $6
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $HYPERSCAN "$1.*$" $6
 		LC_ALL=C $HYPERSCAN "$1.*$" $6
 		LC_ALL=C $HYPERSCAN "$1.*$" $6
@@ -161,7 +214,7 @@ run_simple_case() {
 		echo "\"hyperscan\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1.*$"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1.*$"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1.*$"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1.*$"
@@ -175,7 +228,7 @@ run_simple_case() {
 		echo "\"zhs_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1.*$"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1.*$"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1.*$"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1.*$"
@@ -193,7 +246,7 @@ run_simple_case() {
 	# RIPGREP
 
 	if [[ $RGTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 10000 >> $TMP
 			echo 10000 >> zrg_zstd.txt
@@ -211,7 +264,7 @@ run_simple_case() {
 		echo "\"ripgrep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
@@ -225,7 +278,7 @@ run_simple_case() {
 		echo "\"zrg_zstd_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1"
@@ -239,7 +292,7 @@ run_simple_case() {
 		echo "\"zrg_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
 		LC_ALL=C $RG --dfa-size-limit 8G --regex-size-limit 8G -c "$1" $6
@@ -269,6 +322,12 @@ iterate_sizes() {
 		COUNTER=0
 		JSON=$var$2".json"
 		SIZE=$var
+
+		if [[ ! -f "$FILE$SIZE.txt" ]]; then
+			echo "Skipping $SIZE: $FILE$SIZE.txt not found" >&2
+			continue
+		fi
+
 		echo "[" > $JSON
 		echo "{" >> $JSON
 		rm -f gsearch.txt zgrep_lz4.txt zrg_lz4.txt zgrep_zstd.txt zrg_zstd.txt zgrep_gzip.txt zrg_gzip.txt navarro.txt lzgrep.txt grep.txt ripgrep.txt zrg_lz4_p.txt zgrep_lz4_p.txt zrg_zstd_p.txt zgrep_zstd_p.txt zgrep_gzip_p.txt zrg_gzip_p.txt zhs_lz4_p.txt zhs_zstd_p.txt hyperscan.txt
@@ -287,7 +346,7 @@ iterate_sizes() {
 
 		# (De)compression
 		REPS=3
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
 		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
 		LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
@@ -299,7 +358,7 @@ iterate_sizes() {
 		done
 		echo "\"zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
 		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
 		LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
@@ -311,7 +370,7 @@ iterate_sizes() {
 		done
 		echo "\"lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
 		LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
 		LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
@@ -323,7 +382,7 @@ iterate_sizes() {
 		done
 		echo "\"repair\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-		rm $TMP
+		rm -f $TMP
 		cp $FILE$SIZE".txt" "a.txt"
 		LC_ALL=C $GZIP -f "a.txt"
 		LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
@@ -544,20 +603,20 @@ echo "</script>" >> $INDEX
 
 echo "<div>" >> $INDEX
 echo "<h1><center> Tools </center></h1>" >> $INDEX
-echo "<p id=\"p1\"> zearch:</p>" >> $INDEX
-echo "<p id=\"p2\"> grep:</p>" >> $INDEX
-echo "<p id=\"p3\"> ripgrep:</p>" >> $INDEX
-echo "<p id=\"p4\"> hyperscan:</p>" >> $INDEX
-echo "<p id=\"p5\"> lz4|hyperscan:</p>" >> $INDEX
-echo "<p id=\"p6\"> zstd|hyperscan:</p>" >> $INDEX
-echo "<p id=\"p7\"> lz4|grep:</p>" >> $INDEX
-echo "<p id=\"p8\"> zstd|grep:</p>" >> $INDEX
-echo "<p id=\"p9\"> lz4|ripgrep:</p>" >> $INDEX
-echo "<p id=\"p10\"> zstd|ripgrep:</p>" >> $INDEX
-echo "<p id=\"p11\"> repair:</p>" >> $INDEX
-echo "<p id=\"p12\"> lz4:</p>" >> $INDEX
-echo "<p id=\"p13\"> zstd:</p>" >> $INDEX
-echo "<p id=\"p14\"> gzip:</p>" >> $INDEX
+echo "<p id=\"p1\"><span>zearch</span><span style=\"color:black;font-weight:normal\"> &mdash; searches regex directly on Re-Pair grammar-compressed text without decompression</span></p>" >> $INDEX
+echo "<p id=\"p2\"><span>grep</span><span style=\"color:black;font-weight:normal\"> &mdash; GNU grep on plain (uncompressed) text</span></p>" >> $INDEX
+echo "<p id=\"p3\"><span>ripgrep</span><span style=\"color:black;font-weight:normal\"> &mdash; fast ripgrep on plain (uncompressed) text</span></p>" >> $INDEX
+echo "<p id=\"p4\"><span>hyperscan</span><span style=\"color:black;font-weight:normal\"> &mdash; Intel Hyperscan engine on plain (uncompressed) text</span></p>" >> $INDEX
+echo "<p id=\"p5\"><span>lz4|hyperscan</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with LZ4, then search with Hyperscan</span></p>" >> $INDEX
+echo "<p id=\"p6\"><span>zstd|hyperscan</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with Zstandard, then search with Hyperscan</span></p>" >> $INDEX
+echo "<p id=\"p7\"><span>lz4|grep</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with LZ4, then search with grep</span></p>" >> $INDEX
+echo "<p id=\"p8\"><span>zstd|grep</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with Zstandard, then search with grep</span></p>" >> $INDEX
+echo "<p id=\"p9\"><span>lz4|ripgrep</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with LZ4, then search with ripgrep</span></p>" >> $INDEX
+echo "<p id=\"p10\"><span>zstd|ripgrep</span><span style=\"color:black;font-weight:normal\"> &mdash; decompress with Zstandard, then search with ripgrep</span></p>" >> $INDEX
+echo "<p id=\"p11\"><span>repair</span><span style=\"color:black;font-weight:normal\"> &mdash; Re-Pair decompression only (no search; decompression baseline)</span></p>" >> $INDEX
+echo "<p id=\"p12\"><span>lz4</span><span style=\"color:black;font-weight:normal\"> &mdash; LZ4 decompression only (no search; decompression baseline)</span></p>" >> $INDEX
+echo "<p id=\"p13\"><span>zstd</span><span style=\"color:black;font-weight:normal\"> &mdash; Zstandard decompression only (no search; decompression baseline)</span></p>" >> $INDEX
+echo "<p id=\"p14\"><span>gzip</span><span style=\"color:black;font-weight:normal\"> &mdash; Gzip decompression only (no search; decompression baseline)</span></p>" >> $INDEX
 
 echo "<br>" >> $INDEX
 echo "<h1><center> Overview </center></h1>" >> $INDEX
@@ -579,7 +638,9 @@ rerp=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[
 regsearch=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]{4}" "[0-9]{9}" " (19|20)[0-9]{2} " " [a-z]{2} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 regrep=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]\{4\}" "[0-9]\{9\}" " \(19\|20\)[0-9]\{2\} " " [a-z]\{2\} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 ren=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z][a-z][a-z][a-z]" "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" " (19|20)[0-9][0-9] " " [a-z][a-z] " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
-iterate_files ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+if should_run_type "subs"; then
+	iterate_files ../benchmark/subs/original Subtitles 30 "${SIZES[@]}"
+fi
 
 
 #############################
@@ -593,7 +654,9 @@ regsearch=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* yo
 regrep=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z]\{4\}" "[0-9]\{9\}" " \(19\|20\)[0-9]\{2\} " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 ren=("." "wosel" "but where are you" "have" "I love you" "a" "\." "I .* you" "[a-z][a-z][a-z][a-z]" "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]" " (19|20)[0-9][0-9] " " [a-z][a-z] " " [0-9]5[0-9]0[0-9]4[0-9]5[0-9] ")
 
-iterate_files ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+if should_run_type "gutenberg"; then
+	iterate_files ../benchmark/gutenberg/original Gutenberg 30 "${SIZES[@]}"
+fi
 
 #############################
 ##
@@ -606,7 +669,9 @@ regsearch=("." "wosel" "1993" "20[0-9]{2}" ".*5" "[a-z]{5}" " [0-9]{9} ")
 regrep=("." "wosel" "1993" "20[0-9]\{2\}" ".*5" "[a-z]\{5\}" " [0-9]\{9\} ")
 ren=("." "wosel" "1993" "20[0-9][0-9]" ".*5" "[a-z][a-z][a-z][a-z][a-z]" " [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] ")
 
-iterate_files ../benchmark/csv/original CSV 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+if should_run_type "csv"; then
+	iterate_files ../benchmark/csv/original CSV 30 "${SIZES[@]}"
+fi
 
 #############################
 ##
@@ -619,7 +684,9 @@ regsearch=("." "wosel" "port" "20[0-9]{2}" "([0-9]{3}\.){3}[0-9]" "[0-9]{4}" "([
 regrep=("." "wosel" "port" "20[0-9]\{2\}" "\([0-9]\{3\}\.\)\{3\}[0-9]" "[0-9]\{4\}" "\([a-z]\+\.\)\+[a-z]\+ - -" "\"GET .*\" \([13-9]\|2[1-9]\|2-[1-9]\)" "(([0-9])\|([0-2][0-9])\|([3][0-1]))/(Jan\|Feb\|Mar\|Apr\|May\|Jun\|Jul\|Aug\|Sep\|Oct\|Nov\|Dec)/[0-9]\{4\}" "(([0-9])\|([0-2][0-9])\|([3][0-1]))-(Jan\|Feb\|Mar\|Apr\|May\|Jun\|Jul\|Aug\|Sep\|Oct\|Nov\|Dec)-[0-9]\{4\}")
 ren=("." "wosel" "port" "20[0-9][0-9]" "([0-9]{3}\.){3}[0-9]" "[0-9]{4}" "([a-z]+\.)+[a-z]+ - -" "\"GET .*\" ([13-9]|2[1-9]|2-[1-9])" "(([0-9])|([0-2][0-9])|([3][0-1]))/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/[0-9]{4}" "(([0-9])|([0-2][0-9])|([3][0-1]))-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-9]{4}")
 
-iterate_files ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+if should_run_type "logs"; then
+	iterate_files ../benchmark/logs/original Logs 30 "${SIZES[@]}"
+fi
 
 #############################
 ##
@@ -655,4 +722,6 @@ rerp=("." "qwerty" "qwerti" "wosel" "[a-z]{5}")
 regsearch=("." "qwerty" "qwerti" "wosel" "[a-z]{5}")
 regrep=("." "qwerty" "qwerti" "wosel" "[a-z]\{5\}")
 
-iterate_files ../benchmark/yes/original Qwerty 30 1KB 10KB 25KB 50KB 75KB 100KB 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+if should_run_type "qwerty"; then
+	iterate_files ../benchmark/yes/original Qwerty 30 "${SIZES[@]}"
+fi

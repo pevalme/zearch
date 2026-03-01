@@ -16,7 +16,7 @@ GZIP="gzip"
 BLUE="\033[0;34m"
 NC="\033[0m" # No Color
 
-RANDOM=0 # Set to 1 to generate random files. Not used for the final experiments.
+GENERATE_RANDOM=0 # Set to 1 to generate random files. Not used for the final experiments.
 
 # Quick mode: pass --quick to skip files larger than 100KB (for testing).
 QUICK=0
@@ -292,20 +292,50 @@ echo -e "$BLUE============== Preparing CSV files ==============$NC"
 mkdir -p csv
 cd csv
 
-wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-go.gz
-wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-ww.gz
-wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-ab.gz
-wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-zz.gz
-wget -q http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-ye.gz
+for suffix in go ww ab zz ye; do
+	url="http://storage.googleapis.com/books/ngrams/books/googlebooks-eng-all-2gram-20120701-${suffix}.gz"
+	if ! wget "$url"; then
+		echo "Error: Failed to download $url" >&2
+		echo "Check the URL and your network connection." >&2
+		cd ..
+		exit 1
+	fi
+done
 
-zcat googlebooks-eng-all-2gram-20120701-{go,ww,ab,zz,ye}.gz > tmp.txt
-rm googlebooks-eng-all-2gram-20120701-{go,ww,ab,zz,ye}.gz
-shuf tmp.txt > csv.txt
-rm tmp.txt
+# Validate that each downloaded file is actually a gzip archive.
+# wget exits 0 on HTTP 4xx/5xx on some configurations and saves the HTML
+# error page as the file; zcat on HTML produces no output silently.
+for suffix in go ww ab zz ye; do
+	f="googlebooks-eng-all-2gram-20120701-${suffix}.gz"
+	if ! gzip -t "$f" 2>/dev/null; then
+		echo "Error: $f is not a valid gzip file." >&2
+		echo "The server likely returned an error page. Check the URL or try again later." >&2
+		cd ..
+		exit 1
+	fi
+done
+
 echo "Data downloaded!!"
 
-iconv --to-code US-ASCII -c csv.txt > original.txt 
-rm csv.txt
+# Decompress each file individually and append until we reach 1GB.
+# Passing multiple files to a single zcat causes silent empty output when head
+# exits early from SIGPIPE; processing one file at a time avoids this.
+rm -f original.txt
+for suffix in go ww ab zz ye; do
+	current_size=$(stat -c%s original.txt 2>/dev/null || echo 0)
+	needed=$((1073741824 - current_size))
+	[[ $needed -le 0 ]] && break
+	zcat "googlebooks-eng-all-2gram-20120701-${suffix}.gz" \
+		| iconv --to-code US-ASCII -c \
+		| head -c "$needed" >> original.txt
+done
+rm -f googlebooks-eng-all-2gram-20120701-{go,ww,ab,zz,ye}.gz
+
+if [[ ! -s original.txt ]]; then
+	echo "Error: CSV original.txt is empty after processing." >&2
+	cd ..
+	exit 1
+fi
 
 echo "Generating files of different sizes and compressing them"
 split_and_compress
@@ -334,7 +364,7 @@ echo ""
 echo "==================================================="
 echo ""
 
-if [[ $RANDOM == 0 ]]; then
+if [[ $GENERATE_RANDOM == 0 ]]; then
 	echo "ALL FILES GENERATED"
 	exit
 fi
@@ -343,11 +373,11 @@ echo -e "$BLUE============== Preparing Random files ==============$NC"
 mkdir -p random01
 cd random01
 
-cat /dev/urandom | tr -dc "01" | dd bs=10M count=50 iflags=fullblock 2>/dev/null > random.txt
+LC_ALL=C tr -dc '01' < /dev/urandom | head -c 524288000 > random.txt
 
 echo "Data created!!"
 
-iconv --to-code US-ASCII -c random.txt > original.txt 
+iconv --to-code US-ASCII -c random.txt > original.txt
 rm random.txt
 
 echo "Generating files of different sizes and compressing them"
@@ -358,7 +388,7 @@ echo -e "$BLUE============== Preparing RandomL files ==============$NC"
 mkdir -p random01lines
 cd random01lines
 
-cat /dev/urandom | tr -dc "0123456789\n" | dd bs=10M count=50 iflags=fullblock 2>/dev/null > tmp.txt
+LC_ALL=C tr -dc '0123456789\n' < /dev/urandom | head -c 524288000 > tmp.txt
 cat tmp.txt | tr "2" "0" | tr "4" "0" | tr "6" "0" | tr "8" "0" | tr "3" "1" | tr "5" "1" | tr "7" "1" | tr "9" "1" > random.txt
 rm tmp.txt 
 echo "Data created!!"
