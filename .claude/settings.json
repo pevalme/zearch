@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:opus.nlpl.eu)",
+      "WebFetch(domain:object.pouta.csc.fi)",
+      "Read(//usr/bin/**)",
+      "Bash(echo \"Exit: $?\")",
+      "Read(//tmp/**)",
+      "WebFetch(domain:github.com)",
+      "Bash(# Check if the pgcorpus/gutenberg dataset has a direct download curl -sI \"\"https://zenodo.org/api/records/3360392\"\")",
+      "Bash(apt-cache show libhyperscan-dev)"
+    ]
+  }
+}

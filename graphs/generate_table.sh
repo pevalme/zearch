@@ -6,16 +6,16 @@
 #
 # Date: 14/01/2019
 
-REPAIR="../../Re-Pair/repair110811/repair"
-DESPAIR="../../Re-Pair/repair110811/despair"
-GREP="../../grep-3.3/src/grep"
+REPAIR="../benchmark/repair110811/repair"
+DESPAIR="../benchmark/repair110811/despair"
+GREP="grep"
 ZEARCH="../zearch"
 HYPERSCAN="./hyperscan"
-LZ4="../../lz4/lz4"
-ZSTD="../../zstd/zstd"
+LZ4="lz4"
+ZSTD="zstd"
 NAVARRO="../../code/search"
-LZW="../../code/compress"
-GZIP="../../gzip-1.9/gzip"
+LZW="compress"
+GZIP="gzip"
 COUNTER=0
 
 TMP="tmp.txt"
@@ -35,6 +35,9 @@ run_simple_case() {
 	NTO=0
 	HTO=0
 
+	# Mark NAVARRO as unavailable if the binary is not present
+	if [[ ! -x "$NAVARRO" ]]; then NTO=1; fi
+
 	BEGIN=$(date +%s%3N)
 	for i in `seq 1 $REPS`; do $ZEARCH -c "$2" $6.rp 2>&1 1>/dev/null; done
 	END=$(date +%s%3N)
@@ -51,7 +54,7 @@ run_simple_case() {
 	if [[ $? == 124 ]]; then NTO=1; MATCHESN=0; fi
 
 	# ZEARCH
-	rm $TMP
+	rm -f $TMP
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
 	LC_ALL=C $ZEARCH -c "$2" $6.rp
@@ -67,7 +70,7 @@ run_simple_case() {
 	# GREP
 
 	if [[ $GTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 20000 >> $TMP
 			echo 20000 >> zgrep_lz4.txt
@@ -85,7 +88,7 @@ run_simple_case() {
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $GREP -c "$3"
@@ -99,7 +102,7 @@ run_simple_case() {
 		echo "\"zgrep_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $GREP -c "$3" "$6"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $GREP -c "$3" "$6"
 		LC_ALL=C $GREP -c "$3" "$6"
 		LC_ALL=C $GREP -c "$3" "$6"
@@ -113,7 +116,7 @@ run_simple_case() {
 		echo "\"grep\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $GREP -c "$3"
@@ -130,7 +133,7 @@ run_simple_case() {
 	# HYPERSCAN
 
 	if [[ $HTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 20000 >> $TMP
 			echo 20000 >> hyperscan.txt
@@ -140,7 +143,7 @@ run_simple_case() {
 		echo "\"zhs_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $HYPERSCAN "$1" $6
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $HYPERSCAN "$1" $6
 		LC_ALL=C $HYPERSCAN "$1" $6
 		LC_ALL=C $HYPERSCAN "$1" $6
@@ -154,7 +157,7 @@ run_simple_case() {
 		echo "\"hyperscan\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1"
 		LC_ALL=C $LZ4 -dc $6.lz4 | LC_ALL=C $HYPERSCAN "$1"
@@ -168,7 +171,7 @@ run_simple_case() {
 		echo "\"zhs_lz4_p\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1"
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1"
 		LC_ALL=C $ZSTD -dc $6.zst | LC_ALL=C $HYPERSCAN "$1"
@@ -185,7 +188,7 @@ run_simple_case() {
 	# NAVARRO
 
 	if [[ $NTO == 1 ]]; then
-		rm $TMP
+		rm -f $TMP
 		for i in `seq 1 $REPS`; do
 			echo 20000 >> $TMP
 			echo 20000 >> navarro.txt
@@ -193,7 +196,7 @@ run_simple_case() {
 		echo "\"navarro\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 	else
 		LC_ALL=C $NAVARRO "$4" $6.Z
-		rm $TMP
+		rm -f $TMP
 		LC_ALL=C $NAVARRO "$4" $6.Z
 		LC_ALL=C $NAVARRO "$4" $6.Z
 		LC_ALL=C $NAVARRO "$4" $6.Z
@@ -221,9 +224,14 @@ iterate_sizes() {
 	do
 		REPS=$3
 		COUNTER=0
-		# echo "Processing files original$var.txt{rp,gz}"
 		JSON=$var$2".json"
 		SIZE=$var
+
+		if [[ ! -f "$FILE$SIZE.txt" ]]; then
+			echo "Skipping $SIZE: $FILE$SIZE.txt not found" >&2
+			continue
+		fi
+
 		echo "[" > $JSON
 		echo "{" >> $JSON
 		rm -f gsearch.txt zgrep_lz4.txt zrg_lz4.txt zgrep_zstd.txt zrg_zstd.txt zgrep_gzip.txt zrg_gzip.txt navarro.txt lzgrep.txt grep.txt ripgrep.txt zrg_lz4_p.txt zgrep_lz4_p.txt zrg_zstd_p.txt zgrep_zstd_p.txt zgrep_gzip_p.txt zrg_gzip_p.txt zhs_lz4_p.txt hyperscan.txt zpc_lz4_p.txt pcregrep.txt zhs_zstd_p.txt
@@ -243,7 +251,7 @@ iterate_sizes() {
 		if [[ $DE_COMPRESSORS == 1 ]]; then
 			# (De)compression
 			REPS=3
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $ZSTD -dc $FILE$SIZE".txt".zst > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -255,7 +263,7 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.zst)
 			echo "\"zstd_s\": $FILESIZE," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $LZ4 -dc $FILE$SIZE".txt".lz4 > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -267,7 +275,7 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.lz4)
 			echo "\"lz4_s\": $FILESIZE," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			cp $FILE$SIZE".txt" "a.txt"
 			LC_ALL=C $LZW -f "a.txt"
 			LC_ALL=C $LZW -dc "a.txt.Z" > /dev/null
@@ -281,7 +289,7 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.Z)
 			echo "\"lzw_s\": $FILESIZE," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $DESPAIR $FILE$SIZE".txt" > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -293,7 +301,7 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.rp)
 			echo "\"repair_s\": $FILESIZE," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			cp $FILE$SIZE".txt" "a.txt"
 			LC_ALL=C $GZIP -f "a.txt"
 			LC_ALL=C $GZIP -dc "a.txt.gz" > /dev/null
@@ -307,7 +315,7 @@ iterate_sizes() {
 			FILESIZE=$(stat -c%s $FILE$SIZE.txt.gz)
 			echo "\"gzip_s\": $FILESIZE," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $ZSTD -c --ultra -22 $FILE$SIZE".txt" > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -317,7 +325,7 @@ iterate_sizes() {
 			done
 			echo "\"zstd\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $LZ4 -c -9 $FILE$SIZE".txt" > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -327,7 +335,7 @@ iterate_sizes() {
 			done
 			echo "\"lz4\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			cp $FILE$SIZE".txt" "a.txt"
 			LC_ALL=C $LZW -c "a.txt" > /dev/null
 			rm a.txt.Z
@@ -340,7 +348,7 @@ iterate_sizes() {
 			done
 			echo "\"LZW\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			cp $FILE$SIZE".txt" "a.txt"
 			LC_ALL=C $GZIP -c -9 "a.txt" > /dev/null
 			rm a.txt.gz
@@ -353,7 +361,7 @@ iterate_sizes() {
 			done
 			echo "\"gzip\": "`$STATS_SCRIPT $TMP`"," >> $JSON
 
-			rm $TMP
+			rm -f $TMP
 			LC_ALL=C $REPAIR $FILE$SIZE".txt" > /dev/null
 			for i in `seq 1 $REPS`; do
 				BEGIN=$(date +%s%3N)
@@ -390,11 +398,11 @@ regrep=("what" "HTTP" "." "I .* you" " [a-z]\{4\} " "[0-9]\{2\}/\(\(Jun\)\|\(Jul
 ren=("what[^\n]*\n" "HTTP[^\n]*\n" "[^\n][^\n]*\n" "I [^\n]* you[^\n]*\n" " [a-z][a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9]/((Jun)|(Jul)|(Aug))/[0-9][0-9][0-9][0-9][^\n]*\n" " [a-z]*[a-z][a-z][a-z] [^\n]*\n" "[0-9][0-9][0-9][0-9][^\n]*\n")
 relz=("what" "HTTP" "." "I .* you" " [a-z]{4} " "[0-9]{2}/((Jun)|(Jul)|(Aug))/[0-9]{4}" " [a-z]*[a-z]{3} " "[0-9]{4}")
 
-iterate_sizes ../benchmark/yes/original What 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
+# iterate_sizes ../benchmark/yes/original What 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/subs/original Subtitles 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 # iterate_sizes ../benchmark/logs/original Logs 30 1MB 5MB 10MB 25MB 50MB 100MB 250MB 500MB
 
-# iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB
-# iterate_sizes ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB
-# iterate_sizes ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB
+iterate_sizes ../benchmark/gutenberg/original Gutenberg 30 1KB 10KB 25KB 50KB 75KB 100KB
+iterate_sizes ../benchmark/subs/original Subtitles 30 1KB 10KB 25KB 50KB 75KB 100KB
+iterate_sizes ../benchmark/logs/original Logs 30 1KB 10KB 25KB 50KB 75KB 100KB

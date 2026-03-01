@@ -1,16 +1,22 @@
 src = $(wildcard src/*.c)
-obj = $(src:.c=.o)
 
-CFLAGS= -O3 -march=native -flto -mtune=native
-# CFLAGS = -flto -DNDEBUG -ggdb -fno-inline-functions
-LFLAGS = -L/usr/local/lib/ -lfa
+# Use system gcc by default. -fcommon is required for gcc >= 10 because this
+# codebase defines global variables (mem, expand) directly in header files,
+# which violates the C standard's one-definition rule. gcc-8 allowed this via
+# common symbols; newer compilers default to -fno-common. -flto is omitted
+# because it conflicts with -fcommon.
+CC ?= gcc
+CFLAGS ?= -O3 -march=native -mtune=native -fcommon
+
+# libfa ships with the augeas project.
+# Ubuntu/Debian:  sudo apt-get install libaugeas-dev
+# Custom build:   set LFLAGS=-L/usr/local/lib -lfa  (and update LD_LIBRARY_PATH)
+LFLAGS ?= -lfa
 DEBUG = -DDEBUG
 STATS = -DSTATS
 PLOT = -DPLOT
 
-CC = gcc-8
-
-zearch: $(obj)
+zearch: $(src)
 	$(CC) -o $@ $(CFLAGS) $^ $(LFLAGS)
 
 debug: $(src)
@@ -24,4 +30,4 @@ plot: $(src)
 
 .PHONY: clean
 clean:
-	rm -f $(obj) zearch debug stats plot
+	rm -f zearch debug stats plot

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 
 ## Guide for usage:
 ## In your terminal, run the command:

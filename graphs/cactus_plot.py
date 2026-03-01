@@ -1,12 +1,12 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 
 import json
 import sys
 from collections import OrderedDict
 
 if len(sys.argv) != 3:
-	print "Wrong input."
-	print "./cactus-plot input_file output_file"
+	print("Wrong input.")
+	print("./cactus-plot input_file output_file")
 	sys.exit(-1)
 
 with open(sys.argv[1]) as data_file:
