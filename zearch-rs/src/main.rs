@@ -1,7 +1,16 @@
 /*
- * zearch-rs: Rust reimplementation of zearch (optimized)
+ * zearch-rs: Rust reimplementation of zearch (algorithmically optimized)
  * Regular Expression Matching on Grammar-Compressed Text
  * (Ganty & Valero, DCC 2019)
+ *
+ * Optimizations over the C version:
+ *  1. TransitionFull packed to 16 bytes (matching C bitfield layout)
+ *  2. LTO + target-cpu=native (see .cargo/config.toml)
+ *  3. recently_added resized to num_states×num_states after NFA init
+ *     (reduces from 4MB to ~num_states²×4 bytes, fits in L1 cache)
+ *  4. scratch_bitrow replaces edges[1024×1024] + num_edges[1024]:
+ *     composition uses one u64 per state as a bitset instead of indexed
+ *     arrays, reducing working set from 2MB to ≤ num_states×8 bytes
  *
  * License: GPL v3 (same as original C implementation)
  */
@@ -11,9 +20,8 @@
 mod fa_sys;
 
 use fa_sys::*;
-use std::io::{self, Read, Write};
 
-// ── Constants (matching C implementation) ────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const ALPHABET_SIZE: usize = 256;
 const MAX_REGEX_SIZE: usize = 1024;
@@ -25,21 +33,20 @@ const MAX_PREALLOCATED: usize = 32768;
 const CHAR_SIZE: usize = 256;
 const MATCH_MAX_LENGTH: usize = 1000;
 
-// ── TransitionFull packed bitfield constants ──────────────────────────────────
-// Layout mirrors C's bitfield: count(25)|new_lines(1)|is_there(1)|match_(1)|right(1)|left(1)|pairs_used(2)
-// Struct size = 4+4+2+2+4 = 16 bytes (same as C)
-const COUNT_MASK: u32    = 0x01FF_FFFF; // bits 0-24
-const FLAG_NL:   u32     = 1 << 25;     // new_lines
-const FLAG_IT:   u32     = 1 << 26;     // is_there
-const FLAG_MATCH: u32    = 1 << 27;     // match_
-const FLAG_RIGHT: u32    = 1 << 28;     // right
-const FLAG_LEFT:  u32    = 1 << 29;     // left
-const PU_SHIFT:   u32    = 30;          // pairs_used starts at bit 30
-const PU_MASK:    u32    = 3 << 30;     // bits 30-31
+// ── TransitionFull packed bitfield ────────────────────────────────────────────
+// Matches C's bitfield layout: count(25)|new_lines(1)|is_there(1)|match_(1)|right(1)|left(1)|pairs_used(2)
+// Struct size = 4+4+2+2+4 = 16 bytes (identical to C)
+const COUNT_MASK:  u32 = 0x01FF_FFFF;
+const FLAG_NL:     u32 = 1 << 25;
+const FLAG_IT:     u32 = 1 << 26;
+const FLAG_MATCH:  u32 = 1 << 27;
+const FLAG_RIGHT:  u32 = 1 << 28;
+const FLAG_LEFT:   u32 = 1 << 29;
+const PU_SHIFT:    u32 = 30;
+const PU_MASK:     u32 = 3 << 30;
 
 // ── Core data structures ──────────────────────────────────────────────────────
 
-/// Linked-list node in the overflow allocator (matches C PAIR)
 #[derive(Clone, Copy, Default)]
 struct Pair {
     next_block: i16,
@@ -48,14 +55,13 @@ struct Pair {
     final_: [u8; NUM_PAIRS_PER_STRUCT],
 }
 
-/// Per-grammar-variable NFA transition info (16 bytes, same layout as C TRANSITION_FULL)
+/// 16-byte struct matching C's TRANSITION_FULL bitfield layout
 #[derive(Clone, Copy, Default)]
 struct TransitionFull {
     initial: [u8; NUM_PAIRS_INITIAL],
     final_: [u8; NUM_PAIRS_INITIAL],
     first_block: i16,
     first_index: i16,
-    /// Packed: count[0:24] | new_lines[25] | is_there[26] | match_[27] | right[28] | left[29] | pairs_used[30:31]
     packed: u32,
 }
 
@@ -88,13 +94,9 @@ impl TransitionFull {
     #[inline(always)] fn set_pairs_used(&mut self, v: u8) {
         self.packed = (self.packed & !PU_MASK) | ((v as u32 & 3) << PU_SHIFT);
     }
-
-    fn empty() -> Self {
-        TransitionFull { first_block: -1, first_index: -1, ..Default::default() }
-    }
+    fn empty() -> Self { TransitionFull { first_block: -1, first_index: -1, ..Default::default() } }
 }
 
-/// Compact per-sequence-element info (matches C TRANSITION_SEQ)
 #[derive(Clone, Copy, Default)]
 struct TransitionSeq {
     new_lines: bool,
@@ -103,14 +105,13 @@ struct TransitionSeq {
     left: bool,
 }
 
-/// Grammar rule: variable → left_symbol right_symbol
 #[derive(Clone, Copy, Default)]
 struct GrammarRule {
     left_symbol: u32,
     right_symbol: u32,
 }
 
-// ── Memory allocator (matches C MEMORY) ──────────────────────────────────────
+// ── Memory allocator ──────────────────────────────────────────────────────────
 
 struct Memory {
     blocks: Vec<Vec<Pair>>,
@@ -118,9 +119,7 @@ struct Memory {
 }
 
 impl Memory {
-    fn new() -> Self {
-        Memory { blocks: Vec::new(), num_pos: MAX_PREALLOCATED }
-    }
+    fn new() -> Self { Memory { blocks: Vec::new(), num_pos: MAX_PREALLOCATED } }
 
     fn malloc(&mut self) -> (i16, i16) {
         if self.num_pos == MAX_PREALLOCATED {
@@ -144,7 +143,7 @@ impl Memory {
     }
 }
 
-// ── Bit reader (matches C BITIN) ──────────────────────────────────────────────
+// ── Bit reader ────────────────────────────────────────────────────────────────
 
 struct BitIn {
     data: Vec<u32>,
@@ -171,41 +170,33 @@ impl BitIn {
 
     #[inline(always)]
     fn read_bits(&mut self, rblen: u32) -> u32 {
-        const W_BITS: u32 = 32;
+        const W: u32 = 32;
         if rblen < self.bitlen {
-            let x = self.bitbuf >> (W_BITS - rblen);
+            let x = self.bitbuf >> (W - rblen);
             self.bitbuf = self.bitbuf.wrapping_shl(rblen);
             self.bitlen -= rblen;
             x
         } else {
             let s = rblen - self.bitlen;
-            let x = if self.bitlen + s == 0 {
-                0
-            } else if s == 0 {
-                self.bitbuf >> (W_BITS - self.bitlen)
-            } else {
-                self.bitbuf >> (W_BITS - self.bitlen - s)
-            };
+            let x = if self.bitlen + s == 0 { 0 }
+                    else if s == 0 { self.bitbuf >> (W - self.bitlen) }
+                    else { self.bitbuf >> (W - self.bitlen - s) };
             let word = if self.pos < self.data.len() { self.data[self.pos] } else { 0 };
             self.pos += 1;
             self.bitbuf = word;
-            self.bitlen = W_BITS - s;
+            self.bitlen = W - s;
             if s != 0 {
                 let result = x | (self.bitbuf >> self.bitlen);
                 self.bitbuf = self.bitbuf.wrapping_shl(s);
                 result
-            } else {
-                x
-            }
+            } else { x }
         }
     }
 }
 
 // ── Stack ─────────────────────────────────────────────────────────────────────
 
-struct Stack {
-    data: Vec<u32>,
-}
+struct Stack { data: Vec<u32> }
 
 impl Stack {
     fn new() -> Self { Stack { data: Vec::with_capacity(1024) } }
@@ -220,16 +211,25 @@ struct ZearchState {
     automaton_seq: Vec<TransitionSeq>,
     grammar: Vec<GrammarRule>,
 
-    recently_added: Vec<i32>,      // flat [MAX_REGEX_SIZE * MAX_REGEX_SIZE]
+    /// Dedup table: recently_added[i * ra_stride + f] = rule ID that last added edge (i→f).
+    /// Resized to num_states × num_states after NFA init (stride = num_states).
+    /// For a 10-state NFA: 400 bytes vs old 4MB — all in L1 cache.
+    recently_added: Vec<i32>,
+    ra_stride: usize,
+
     reached_states: [Vec<i32>; 2],
     rs_idx: usize,
 
     list_dots: Vec<u16>,
     dots: Vec<u8>,
     final_states: Vec<u8>,
-    num_edges: Vec<u16>,
-    /// Flat [MAX_REGEX_SIZE * MAX_REGEX_SIZE]: edges[q * MAX_REGEX_SIZE + k] = destination state k for source state q
-    edges: Vec<u16>,
+
+    /// Bitrow scratch buffer for right-side composition.
+    /// Layout: scratch_bitrow[state * bpr + word] where bpr = ceil(num_states/64).
+    /// For a 10-state NFA: 10 u64s = 80 bytes vs old edges[1024×1024] = 2MB.
+    scratch_bitrow: Vec<u64>,
+    /// Number of u64 words per bitrow: ceil(num_states / 64)
+    bpr: usize,
 
     num_states: usize,
     num_dots: usize,
@@ -259,29 +259,26 @@ struct ZearchState {
 
 impl ZearchState {
     fn new(num_rules: u32, seq_len: usize, mode: u8) -> Self {
-        let mut s = ZearchState {
+        ZearchState {
             automaton: vec![TransitionFull::empty(); num_rules as usize],
             automaton_seq: if mode != b'c' && mode != b'b' {
                 vec![TransitionSeq::default(); seq_len]
-            } else {
-                Vec::new()
-            },
+            } else { Vec::new() },
             grammar: if mode != b'c' && mode != b'b' {
                 vec![GrammarRule::default(); num_rules as usize + seq_len]
-            } else {
-                Vec::new()
-            },
-            recently_added: vec![0i32; MAX_REGEX_SIZE * MAX_REGEX_SIZE],
-            reached_states: [
-                vec![-1i32; MAX_REGEX_SIZE],
-                vec![-1i32; MAX_REGEX_SIZE],
-            ],
+            } else { Vec::new() },
+            // Deferred: allocated in resize_after_automaton_init() to avoid 4MB zero-fill at startup
+            recently_added: Vec::new(),
+            ra_stride: 0,
+            // Deferred: resized to num_states in resize_after_automaton_init()
+            reached_states: [Vec::new(), Vec::new()],
             rs_idx: 0,
             list_dots: vec![0u16; MAX_REGEX_SIZE],
             dots: vec![0u8; MAX_REGEX_SIZE],
             final_states: vec![0u8; MAX_REGEX_SIZE],
-            num_edges: vec![0u16; MAX_REGEX_SIZE],
-            edges: vec![0u16; MAX_REGEX_SIZE * MAX_REGEX_SIZE],
+            // Deferred: allocated in resize_after_automaton_init()
+            scratch_bitrow: Vec::new(),
+            bpr: 0,
             num_states: 0,
             num_dots: 0,
             mem: Memory::new(),
@@ -289,9 +286,7 @@ impl ZearchState {
             counting_overflows: 0,
             seq_counter: 0,
             seq_counter_new: 0,
-            rule: 0,
-            left: 0,
-            right: 0,
+            rule: 0, left: 0, right: 0,
             tleft: TransitionFull::empty(),
             tright: TransitionFull::empty(),
             trule: TransitionFull::empty(),
@@ -301,21 +296,36 @@ impl ZearchState {
             expand: false,
             buffer: vec![0u8; MATCH_MAX_LENGTH],
             bufpos: 0,
-        };
-        s.automaton[10].set_new_lines(true);
-        s.automaton[13].set_new_lines(true);
-        s.dots[0] = 1;
-        s
+        }
+    }
+
+    /// Resize hot tables to num_states after NFA initialization.
+    /// This shrinks recently_added from 4MB to num_states² bytes and
+    /// scratch_bitrow from 8KB to num_states*bpr*8 bytes.
+    fn resize_after_automaton_init(&mut self) {
+        let ns = self.num_states;
+        let bpr = (ns + 63) / 64;
+        self.ra_stride = ns;
+        self.recently_added = vec![0i32; ns * ns];
+        self.bpr = bpr;
+        self.scratch_bitrow = vec![0u64; ns * bpr];
+        self.reached_states[0] = vec![-1i32; ns];
+        self.reached_states[1] = vec![-1i32; ns];
+        // Newlines generate new_lines
+        self.automaton[10].set_new_lines(true);
+        self.automaton[13].set_new_lines(true);
+        // Initial state is always a dot state
+        self.dots[0] = 1;
     }
 
     #[inline(always)]
     fn ra_get(&self, i: usize, f: usize) -> i32 {
-        unsafe { *self.recently_added.get_unchecked(i * MAX_REGEX_SIZE + f) }
+        unsafe { *self.recently_added.get_unchecked(i * self.ra_stride + f) }
     }
 
     #[inline(always)]
     fn ra_set(&mut self, i: usize, f: usize, val: i32) {
-        unsafe { *self.recently_added.get_unchecked_mut(i * MAX_REGEX_SIZE + f) = val; }
+        unsafe { *self.recently_added.get_unchecked_mut(i * self.ra_stride + f) = val; }
     }
 
     // ── NFA initialization (via libfa FFI) ────────────────────────────────
@@ -372,18 +382,18 @@ impl ZearchState {
                         } else {
                             for r in 0u8..=9u8 {
                                 self.rule = r as u32;
-                                self.add_edge_direct(from as u8, from as u8);
+                                self.add_edge_direct_pre(from as u8, from as u8);
                             }
                             for r in begin2..=end2 {
                                 self.rule = r as u32;
-                                self.add_edge_direct(from as u8, from as u8);
+                                self.add_edge_direct_pre(from as u8, from as u8);
                             }
                         }
                     } else {
                         let to = hashes.iter().position(|&h| h == st2).unwrap_or(0);
                         for r in begin..=end {
                             self.rule = r as u32;
-                            self.add_edge_direct(from as u8, to as u8);
+                            self.add_edge_direct_pre(from as u8, to as u8);
                             if from == 0 && self.final_states[to] != 0 {
                                 self.automaton[r as usize].set_match(true);
                             }
@@ -396,91 +406,23 @@ impl ZearchState {
             }
             fa_free(fa_result);
         }
+
+        // Now that num_states is known, shrink hot tables
+        self.resize_after_automaton_init();
     }
 
     // ── Edge addition ─────────────────────────────────────────────────────
 
+    /// Used only during NFA init (before recently_added is resized).
     #[inline(always)]
-    fn add_edge(&mut self, i: u8, f: u8) {
-        let rule = self.rule as i32;
-        self.ra_set(i as usize, f as usize, rule);
-
-        if !self.trule.is_there() {
-            self.trule.set_is_there(true);
-            if (f as usize) >= SMALL_REGEX_BOUND || (i as usize) >= SMALL_REGEX_BOUND {
-                self.trule.set_pairs_used(0);
-                self.trule.first_block = -1;
-                self.trule.first_index = -1;
-                let (block, index) = self.mem.malloc();
-                self.trule.first_block = block;
-                self.trule.first_index = index;
-                let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
-            } else {
-                self.trule.first_block = -1;
-                self.trule.first_index = -1;
-                let pu = self.trule.pairs_used() as usize;
-                self.trule.initial[pu] = i;
-                self.trule.final_[pu] = f;
-                self.trule.set_pairs_used(pu as u8 + 1);
-            }
-        } else if self.trule.pairs_used() == 0 {
-            if self.trule.first_block == -1 {
-                let (block, index) = self.mem.malloc();
-                let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
-                self.trule.first_block = block;
-                self.trule.first_index = index;
-            } else {
-                let mut blk = self.trule.first_block;
-                let mut idx = self.trule.first_index;
-                loop {
-                    let nb = self.mem.get(blk, idx).next_block;
-                    let ni = self.mem.get(blk, idx).next_index;
-                    if nb == -1 { break; }
-                    blk = nb; idx = ni;
-                }
-                let p = self.mem.get_mut(blk, idx);
-                if p.initial[1] == 0 && p.final_[1] == 0 {
-                    p.initial[1] = i; p.final_[1] = f;
-                } else {
-                    let (nb, ni) = self.mem.malloc();
-                    self.mem.get_mut(blk, idx).next_block = nb;
-                    self.mem.get_mut(blk, idx).next_index = ni;
-                    let p2 = self.mem.get_mut(nb, ni);
-                    p2.initial[0] = i; p2.final_[0] = f;
-                    p2.next_block = -1; p2.next_index = -1;
-                }
-            }
-        } else {
-            if (f as usize) >= SMALL_REGEX_BOUND || (i as usize) >= SMALL_REGEX_BOUND {
-                self.trule.set_pairs_used(0);
-                let (block, index) = self.mem.malloc();
-                self.trule.first_block = block;
-                self.trule.first_index = index;
-                let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
-            } else {
-                let pu = self.trule.pairs_used() as usize;
-                self.trule.initial[pu] = i;
-                self.trule.final_[pu] = f;
-                if pu == NUM_PAIRS_INITIAL - 1 {
-                    self.trule.set_pairs_used(0);
-                } else {
-                    self.trule.set_pairs_used(pu as u8 + 1);
-                }
-            }
-        }
-    }
-
-    #[inline(always)]
-    fn add_edge_direct(&mut self, i: u8, f: u8) {
+    fn add_edge_direct_pre(&mut self, i: u8, f: u8) {
         let rule = self.rule as usize;
         if rule == 10 || rule == 13 { return; }
+        // Use the full MAX_REGEX_SIZE stride (pre-resize)
+        self.add_edge_direct_inner(i, f, rule);
+    }
 
+    fn add_edge_direct_inner(&mut self, i: u8, f: u8, rule: usize) {
         if !self.automaton[rule].is_there() {
             self.automaton[rule].set_is_there(true);
             if (f as usize) >= SMALL_REGEX_BOUND || (i as usize) >= SMALL_REGEX_BOUND {
@@ -489,8 +431,7 @@ impl ZearchState {
                 self.automaton[rule].first_block = block;
                 self.automaton[rule].first_index = index;
                 let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
             } else {
                 self.automaton[rule].first_block = -1;
                 self.automaton[rule].first_index = -1;
@@ -503,8 +444,7 @@ impl ZearchState {
             if self.automaton[rule].first_block == -1 {
                 let (block, index) = self.mem.malloc();
                 let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
                 self.automaton[rule].first_block = block;
                 self.automaton[rule].first_index = index;
             } else {
@@ -525,10 +465,8 @@ impl ZearchState {
                     self.mem.get_mut(blk, idx).next_index = ni;
                     {
                         let p2 = self.mem.get_mut(nb, ni);
-                        p2.initial[0] = i; p2.final_[0] = f;
-                        p2.next_block = -1; p2.next_index = -1;
+                        p2.initial[0] = i; p2.final_[0] = f; p2.next_block = -1; p2.next_index = -1;
                     }
-                    self.ra_set(i as usize, f as usize, rule as i32);
                 }
             }
         } else {
@@ -542,8 +480,7 @@ impl ZearchState {
                 self.automaton[rule].first_block = block;
                 self.automaton[rule].first_index = index;
                 let p = self.mem.get_mut(block, index);
-                p.initial[0] = i; p.final_[0] = f;
-                p.next_block = -1; p.next_index = -1;
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
             } else {
                 let pu = self.automaton[rule].pairs_used() as usize;
                 self.automaton[rule].initial[pu] = i;
@@ -557,133 +494,174 @@ impl ZearchState {
         }
     }
 
+    #[inline(always)]
+    fn add_edge(&mut self, i: u8, f: u8) {
+        let rule = self.rule as i32;
+        self.ra_set(i as usize, f as usize, rule);
+
+        if !self.trule.is_there() {
+            self.trule.set_is_there(true);
+            if (f as usize) >= SMALL_REGEX_BOUND || (i as usize) >= SMALL_REGEX_BOUND {
+                self.trule.set_pairs_used(0);
+                self.trule.first_block = -1; self.trule.first_index = -1;
+                let (block, index) = self.mem.malloc();
+                self.trule.first_block = block; self.trule.first_index = index;
+                let p = self.mem.get_mut(block, index);
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
+            } else {
+                self.trule.first_block = -1; self.trule.first_index = -1;
+                let pu = self.trule.pairs_used() as usize;
+                self.trule.initial[pu] = i; self.trule.final_[pu] = f;
+                self.trule.set_pairs_used(pu as u8 + 1);
+            }
+        } else if self.trule.pairs_used() == 0 {
+            if self.trule.first_block == -1 {
+                let (block, index) = self.mem.malloc();
+                let p = self.mem.get_mut(block, index);
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
+                self.trule.first_block = block; self.trule.first_index = index;
+            } else {
+                let mut blk = self.trule.first_block; let mut idx = self.trule.first_index;
+                loop {
+                    let nb = self.mem.get(blk, idx).next_block;
+                    let ni = self.mem.get(blk, idx).next_index;
+                    if nb == -1 { break; }
+                    blk = nb; idx = ni;
+                }
+                let p = self.mem.get_mut(blk, idx);
+                if p.initial[1] == 0 && p.final_[1] == 0 {
+                    p.initial[1] = i; p.final_[1] = f;
+                } else {
+                    let (nb, ni) = self.mem.malloc();
+                    self.mem.get_mut(blk, idx).next_block = nb;
+                    self.mem.get_mut(blk, idx).next_index = ni;
+                    let p2 = self.mem.get_mut(nb, ni);
+                    p2.initial[0] = i; p2.final_[0] = f; p2.next_block = -1; p2.next_index = -1;
+                }
+            }
+        } else {
+            if (f as usize) >= SMALL_REGEX_BOUND || (i as usize) >= SMALL_REGEX_BOUND {
+                self.trule.set_pairs_used(0);
+                let (block, index) = self.mem.malloc();
+                self.trule.first_block = block; self.trule.first_index = index;
+                let p = self.mem.get_mut(block, index);
+                p.initial[0] = i; p.final_[0] = f; p.next_block = -1; p.next_index = -1;
+            } else {
+                let pu = self.trule.pairs_used() as usize;
+                self.trule.initial[pu] = i; self.trule.final_[pu] = f;
+                if pu == NUM_PAIRS_INITIAL - 1 {
+                    self.trule.set_pairs_used(0);
+                } else {
+                    self.trule.set_pairs_used(pu as u8 + 1);
+                }
+            }
+        }
+    }
+
     // ── Counting functions ─────────────────────────────────────────────────
 
     #[inline(always)]
     fn prop_count(&mut self) {
-        let tleft = self.tleft;
-        let tright = self.tright;
+        let tl = self.tleft; let tr = self.tright;
         self.trule.set_match(true);
-        self.trule.set_count(tleft.count().wrapping_add(tright.count()) & COUNT_MASK);
-        if tleft.new_lines() {
-            self.trule.set_left(tleft.left());
-            if tright.new_lines() {
-                self.trule.set_right(tright.right());
-                let cross = tright.left() || tleft.right();
-                if cross {
-                    self.trule.set_count((self.trule.count().wrapping_add(1)) & COUNT_MASK);
-                }
+        self.trule.set_count(tl.count().wrapping_add(tr.count()) & COUNT_MASK);
+        if tl.new_lines() {
+            self.trule.set_left(tl.left());
+            if tr.new_lines() {
+                self.trule.set_right(tr.right());
+                let cross = tr.left() || tl.right();
+                if cross { self.trule.set_count((self.trule.count().wrapping_add(1)) & COUNT_MASK); }
                 self.expand = cross;
-            } else {
-                self.trule.set_right(tleft.right() || tright.match_());
-            }
-        } else if tright.new_lines() {
-            self.trule.set_left(tright.left() || tleft.match_());
-            self.trule.set_right(tright.right());
+            } else { self.trule.set_right(tl.right() || tr.match_()); }
+        } else if tr.new_lines() {
+            self.trule.set_left(tr.left() || tl.match_());
+            self.trule.set_right(tr.right());
         }
     }
 
     #[inline(always)]
     fn incr_count(&mut self) {
-        let tleft = self.tleft;
-        let tright = self.tright;
+        let tl = self.tleft; let tr = self.tright;
         self.trule.set_match(true);
-        self.trule.set_count(tleft.count().wrapping_add(tright.count()) & COUNT_MASK);
-        if tleft.new_lines() {
-            self.trule.set_left(tleft.left());
-            if tright.new_lines() {
-                self.trule.set_right(tright.right());
+        self.trule.set_count(tl.count().wrapping_add(tr.count()) & COUNT_MASK);
+        if tl.new_lines() {
+            self.trule.set_left(tl.left());
+            if tr.new_lines() {
+                self.trule.set_right(tr.right());
                 self.trule.set_count((self.trule.count().wrapping_add(1)) & COUNT_MASK);
                 self.expand = true;
-            } else {
-                self.trule.set_right(true);
-            }
-        } else if tright.new_lines() {
+            } else { self.trule.set_right(true); }
+        } else if tr.new_lines() {
             self.trule.set_left(true);
-            self.trule.set_right(tright.right());
+            self.trule.set_right(tr.right());
         }
     }
 
     #[inline(always)]
-    fn incr_count_l1(symbol: usize, automaton: &mut [TransitionFull]) {
-        automaton[symbol].set_match(true);
-    }
-
-    #[inline(always)]
     fn prop_count_seq(&mut self) {
-        let tsleft = self.tsleft;
-        let tright = self.tright;
+        let ts = self.tsleft; let tr = self.tright;
         self.tsrule.match_ = true;
-        self.seq_counter_new = self.seq_counter + tright.count() as i32;
-        if tsleft.new_lines {
-            self.tsrule.left = tsleft.left;
-            if tright.new_lines() {
-                self.tsrule.right = tright.right();
-                let cross = tright.left() || tsleft.right;
+        self.seq_counter_new = self.seq_counter + tr.count() as i32;
+        if ts.new_lines {
+            self.tsrule.left = ts.left;
+            if tr.new_lines() {
+                self.tsrule.right = tr.right();
+                let cross = tr.left() || ts.right;
                 if cross { self.seq_counter_new += 1; }
                 self.expand = cross;
-            } else {
-                self.tsrule.right = tsleft.right || tright.match_();
-            }
-        } else if tright.new_lines() {
-            self.tsrule.left = tright.left() || tsleft.match_;
-            self.tsrule.right = tright.right();
+            } else { self.tsrule.right = ts.right || tr.match_(); }
+        } else if tr.new_lines() {
+            self.tsrule.left = tr.left() || ts.match_;
+            self.tsrule.right = tr.right();
         }
     }
 
     #[inline(always)]
     fn incr_count_seq(&mut self) {
-        let tsleft = self.tsleft;
-        let tright = self.tright;
+        let ts = self.tsleft; let tr = self.tright;
         self.tsrule.match_ = true;
-        self.seq_counter_new = self.seq_counter + tright.count() as i32;
-        if tsleft.new_lines {
-            self.tsrule.left = tsleft.left;
-            if tright.new_lines() {
-                self.tsrule.right = tright.right();
-                self.seq_counter_new += 1;
-                self.expand = true;
-            } else {
-                self.tsrule.right = true;
-            }
-        } else if tright.new_lines() {
+        self.seq_counter_new = self.seq_counter + tr.count() as i32;
+        if ts.new_lines {
+            self.tsrule.left = ts.left;
+            if tr.new_lines() {
+                self.tsrule.right = tr.right();
+                self.seq_counter_new += 1; self.expand = true;
+            } else { self.tsrule.right = true; }
+        } else if tr.new_lines() {
             self.tsrule.left = true;
-            self.tsrule.right = tright.right();
+            self.tsrule.right = tr.right();
         }
     }
 
     #[inline(always)]
     fn incr_count_seq_1(&mut self, middle_state: bool) {
-        let tleft = self.tleft;
-        let tright = self.tright;
+        let tl = self.tleft; let tr = self.tright;
         self.tsrule.match_ = true;
-        self.seq_counter = tleft.count() as i32 + tright.count() as i32;
-        if tleft.new_lines() {
-            self.tsrule.left = tleft.left();
-            if tright.new_lines() {
-                self.tsrule.right = tright.right();
-                let add = tright.left() || tleft.right() || middle_state;
+        self.seq_counter = tl.count() as i32 + tr.count() as i32;
+        if tl.new_lines() {
+            self.tsrule.left = tl.left();
+            if tr.new_lines() {
+                self.tsrule.right = tr.right();
+                let add = tr.left() || tl.right() || middle_state;
                 if add { self.seq_counter += 1; }
                 self.expand = add;
-            } else {
-                self.tsrule.right = tleft.right() || tright.match_() || middle_state;
-            }
-        } else if tright.new_lines() {
-            self.tsrule.left = tright.left() || tleft.match_() || middle_state;
-            self.tsrule.right = tright.right();
+            } else { self.tsrule.right = tl.right() || tr.match_() || middle_state; }
+        } else if tr.new_lines() {
+            self.tsrule.left = tr.left() || tl.match_() || middle_state;
+            self.tsrule.right = tr.right();
         }
     }
 
-    // ── Saturation construction: add_rule ─────────────────────────────────
+    // ── Saturation construction ────────────────────────────────────────────
 
     fn add_rule(&mut self) {
         let left = self.left as usize;
         let right = self.right as usize;
         let rule = self.rule as i32;
 
-        self.tleft = self.automaton[left];
+        self.tleft  = self.automaton[left];
         self.tright = self.automaton[right];
-        self.trule = TransitionFull::empty();
+        self.trule  = TransitionFull::empty();
         self.expand = false;
 
         let tleft = self.tleft;
@@ -694,230 +672,137 @@ impl ZearchState {
         self.trule.set_left(false);
         self.trule.set_right(false);
 
-        if tright.match_() || tleft.match_() {
-            self.prop_count();
-        }
+        if tright.match_() || tleft.match_() { self.prop_count(); }
 
-        if !tleft.is_there() && !tright.is_there() {
-            return;
-        }
+        if !tleft.is_there() && !tright.is_there() { return; }
 
+        // ── Case 1: only right transitions (or left has no outgoing) ──────
         if !tleft.is_there() || (tright.left() && !tleft.new_lines() && tright.is_there()) {
             if tright.right() { return; }
-
             if tleft.new_lines() {
-                // iterate right edges
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it], tright.final_[it]);
-                    if ini == 0 && self.final_states[fin as usize] == 0 {
-                        if self.ra_get(0, fin as usize) != rule { self.add_edge(0, fin); }
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    if ini == 0 && s.final_states[fin as usize] == 0 {
+                        if s.ra_get(0, fin as usize) != rule { s.add_edge(0, fin); }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                        if ini == 0 && self.final_states[fin as usize] == 0 {
-                            if self.ra_get(0, fin as usize) != rule { self.add_edge(0, fin); }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             } else {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it], tright.final_[it]);
-                    if self.dots[ini as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                        if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    if s.dots[ini as usize] != 0 && (ini != 0 || s.final_states[fin as usize] == 0) {
+                        if s.ra_get(ini as usize, fin as usize) != rule { s.add_edge(ini, fin); }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                        if self.dots[ini as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                            if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
             return;
         }
 
+        // ── Case 2: compose left and right (main path) ─────────────────────
         if tright.is_there() && (!tleft.right() || tright.new_lines()) {
-            // Clear only the states we'll use
-            unsafe {
-                let ne = self.num_edges.as_mut_ptr();
-                std::ptr::write_bytes(ne, 0, self.num_states);
-            }
+            // Build scratch_bitrow from right pairs.
+            // scratch_bitrow[ini * bpr + (fin/64)] |= 1 << (fin%64)
+            // This replaces the old edges[1024×1024] + num_edges[1024] tables.
+            let bpr = self.bpr;
+            let ns  = self.num_states;
+            // Zero out scratch (ns * bpr u64s = typically 80 bytes for a 10-state NFA)
+            self.scratch_bitrow.fill(0);
 
-            // Build right-side lookup table
             let tright_nl = tright.new_lines();
             if tleft.new_lines() {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it], tright.final_[it]);
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    // Store in bitrow
                     unsafe {
-                        let ne_slot = self.num_edges.get_unchecked_mut(ini as usize);
-                        *self.edges.get_unchecked_mut(ini as usize * MAX_REGEX_SIZE + *ne_slot as usize) = fin as u16;
-                        *ne_slot += 1;
+                        let slot = s.scratch_bitrow.get_unchecked_mut(ini as usize * bpr + fin as usize / 64);
+                        *slot |= 1u64 << (fin as usize % 64);
                     }
-                    if ini == 0 && self.final_states[fin as usize] == 0 {
-                        if self.ra_get(0, fin as usize) != rule { self.add_edge(0, fin); }
+                    // Immediate add for state-0 edges
+                    if ini == 0 && s.final_states[fin as usize] == 0 {
+                        if s.ra_get(0, fin as usize) != rule { s.add_edge(0, fin); }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                        unsafe {
-                            let ne_slot = self.num_edges.get_unchecked_mut(ini as usize);
-                            *self.edges.get_unchecked_mut(ini as usize * MAX_REGEX_SIZE + *ne_slot as usize) = fin as u16;
-                            *ne_slot += 1;
-                        }
-                        if ini == 0 && self.final_states[fin as usize] == 0 {
-                            if self.ra_get(0, fin as usize) != rule { self.add_edge(0, fin); }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             } else {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it], tright.final_[it]);
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
                     unsafe {
-                        let ne_slot = self.num_edges.get_unchecked_mut(ini as usize);
-                        *self.edges.get_unchecked_mut(ini as usize * MAX_REGEX_SIZE + *ne_slot as usize) = fin as u16;
-                        *ne_slot += 1;
+                        let slot = s.scratch_bitrow.get_unchecked_mut(ini as usize * bpr + fin as usize / 64);
+                        *slot |= 1u64 << (fin as usize % 64);
                     }
-                    if self.dots[ini as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                        if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
+                    if s.dots[ini as usize] != 0 && (ini != 0 || s.final_states[fin as usize] == 0) {
+                        if s.ra_get(ini as usize, fin as usize) != rule { s.add_edge(ini, fin); }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                        unsafe {
-                            let ne_slot = self.num_edges.get_unchecked_mut(ini as usize);
-                            *self.edges.get_unchecked_mut(ini as usize * MAX_REGEX_SIZE + *ne_slot as usize) = fin as u16;
-                            *ne_slot += 1;
-                        }
-                        if self.dots[ini as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                            if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
-            // Compose: for each left edge (q1 → qm), look up right edges from qm
+            // Compose: for each left edge (ini → fin), iterate scratch_bitrow[fin]
             let mut mid = false;
-            let lpairs = if tleft.pairs_used() != 0 { tleft.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-            for it in 0..lpairs {
-                let (ini, fin) = (tleft.initial[it], tleft.final_[it]);
-                self.compose_left_edge(ini, fin, tright_nl, rule, &mut mid);
-            }
-            let mut blk = tleft.first_block; let mut idx = tleft.first_index;
-            while blk != -1 {
-                let pair = *self.mem.get(blk, idx);
-                if pair.final_[0] == 0 { break; }
-                for it in 0..NUM_PAIRS_PER_STRUCT {
-                    if pair.final_[it] == 0 { break; }
-                    let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                    self.compose_left_edge(ini, fin, tright_nl, rule, &mut mid);
+            Self::iter_pairs(tleft, |ini, fin| (ini, fin), |s, ini, fin| {
+                // Dot self-loop for fin
+                if s.dots[fin as usize] != 0 && (s.final_states[fin as usize] != 0 || !tright_nl) {
+                    if ini != 0 || s.final_states[fin as usize] == 0 {
+                        if s.ra_get(ini as usize, fin as usize) != rule { s.add_edge(ini, fin); }
+                    }
                 }
-                blk = pair.next_block; idx = pair.next_index;
-            }
+                // Compose via bitrow
+                unsafe {
+                    let base = fin as usize * bpr;
+                    for w in 0..bpr {
+                        let mut bits = *s.scratch_bitrow.get_unchecked(base + w);
+                        while bits != 0 {
+                            let b = bits.trailing_zeros() as usize;
+                            bits &= bits - 1;
+                            let dest = (w * 64 + b) as u8;
+                            if ini == 0 && s.final_states[dest as usize] != 0 {
+                                mid |= fin != 0 && s.final_states[fin as usize] == 0;
+                            } else {
+                                if s.ra_get(ini as usize, dest as usize) != rule {
+                                    s.add_edge(ini, dest);
+                                }
+                            }
+                        }
+                    }
+                }
+            }, self);
 
             if mid { self.incr_count(); }
             return;
         }
 
-        // Case 3: No right transitions
+        // ── Case 3: only left transitions ─────────────────────────────────
         if tleft.left() { return; }
-
         if tright.new_lines() {
-            let lpairs = if tleft.pairs_used() != 0 { tleft.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-            for it in 0..lpairs {
-                let (ini, fin) = (tleft.initial[it], tleft.final_[it]);
-                if self.final_states[fin as usize] != 0 && ini != 0 {
-                    if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
+            Self::iter_pairs(tleft, |ini, fin| (ini, fin), |s, ini, fin| {
+                if s.final_states[fin as usize] != 0 && ini != 0 {
+                    if s.ra_get(ini as usize, fin as usize) != rule { s.add_edge(ini, fin); }
                 }
-            }
-            let mut blk = tleft.first_block; let mut idx = tleft.first_index;
-            while blk != -1 {
-                let pair = *self.mem.get(blk, idx);
-                if pair.final_[0] == 0 { break; }
-                for it in 0..NUM_PAIRS_PER_STRUCT {
-                    if pair.final_[it] == 0 { break; }
-                    let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                    if self.final_states[fin as usize] != 0 && ini != 0 {
-                        if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
-                    }
-                }
-                blk = pair.next_block; idx = pair.next_index;
-            }
+            }, self);
         } else {
-            let lpairs = if tleft.pairs_used() != 0 { tleft.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-            for it in 0..lpairs {
-                let (ini, fin) = (tleft.initial[it], tleft.final_[it]);
-                if self.dots[fin as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                    if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
+            Self::iter_pairs(tleft, |ini, fin| (ini, fin), |s, ini, fin| {
+                if s.dots[fin as usize] != 0 && (ini != 0 || s.final_states[fin as usize] == 0) {
+                    if s.ra_get(ini as usize, fin as usize) != rule { s.add_edge(ini, fin); }
                 }
-            }
-            let mut blk = tleft.first_block; let mut idx = tleft.first_index;
-            while blk != -1 {
-                let pair = *self.mem.get(blk, idx);
-                if pair.final_[0] == 0 { break; }
-                for it in 0..NUM_PAIRS_PER_STRUCT {
-                    if pair.final_[it] == 0 { break; }
-                    let (ini, fin) = (pair.initial[it], pair.final_[it]);
-                    if self.dots[fin as usize] != 0 && (ini != 0 || self.final_states[fin as usize] == 0) {
-                        if self.ra_get(ini as usize, fin as usize) != rule { self.add_edge(ini, fin); }
-                    }
-                }
-                blk = pair.next_block; idx = pair.next_index;
-            }
+            }, self);
         }
     }
 
+    /// Generic iterator over all (initial, final) pairs in a TransitionFull.
+    /// Calls `callback(state, ini, fin)` for each pair.
+    /// Using a free function (not a method closure) so the callback can take &mut Self.
     #[inline(always)]
-    fn compose_left_edge(&mut self, ini: u8, fin: u8, tright_new_lines: bool, rule: i32, mid: &mut bool) {
-        if self.dots[fin as usize] != 0 && (self.final_states[fin as usize] != 0 || !tright_new_lines) {
-            if ini != 0 || self.final_states[fin as usize] == 0 {
-                if self.ra_get(ini as usize, fin as usize) != rule {
-                    self.add_edge(ini, fin);
-                }
-            }
+    fn iter_pairs<F>(t: TransitionFull, _key: fn(u8, u8) -> (u8, u8), mut callback: F, s: &mut ZearchState)
+    where F: FnMut(&mut ZearchState, u8, u8)
+    {
+        let npairs = if t.pairs_used() != 0 { t.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
+        for it in 0..npairs {
+            callback(s, t.initial[it], t.final_[it]);
         }
-        unsafe {
-            let ne = *self.num_edges.get_unchecked(fin as usize) as usize;
-            let base = fin as usize * MAX_REGEX_SIZE;
-            for k in 0..ne {
-                let dest = *self.edges.get_unchecked(base + k) as u8;
-                if ini == 0 && self.final_states[dest as usize] != 0 {
-                    *mid |= fin != 0 && self.final_states[fin as usize] == 0;
-                } else {
-                    if self.ra_get(ini as usize, dest as usize) != rule {
-                        self.add_edge(ini, dest);
-                    }
-                }
+        let mut blk = t.first_block;
+        let mut idx = t.first_index;
+        while blk != -1 {
+            let pair = *s.mem.get(blk, idx);
+            if pair.final_[0] == 0 { break; }
+            for it in 0..NUM_PAIRS_PER_STRUCT {
+                if pair.final_[it] == 0 { break; }
+                callback(s, pair.initial[it], pair.final_[it]);
             }
+            blk = pair.next_block;
+            idx = pair.next_index;
         }
     }
 
@@ -940,32 +825,18 @@ impl ZearchState {
             let tright = self.tright;
             let tright_nl = tright.new_lines();
             self.tsrule.new_lines = self.tsleft.new_lines || tright_nl;
-
             let mut mid = false;
 
             if tright.is_there() {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it] as usize, tright.final_[it] as usize);
-                    if self.reached_states[rs_cur][ini] == left as i32 {
-                        self.reached_states[rs_next][fin] = rule as i32;
-                        mid |= self.final_states[fin] != 0 && ini != 0 && self.final_states[ini] == 0;
+                let left_i = left as i32;
+                let rule_i = rule as i32;
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if s.reached_states[rs_cur][ini] == left_i {
+                        s.reached_states[rs_next][fin] = rule_i;
+                        mid |= s.final_states[fin] != 0 && ini != 0 && s.final_states[ini] == 0;
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if self.reached_states[rs_cur][ini] == left as i32 {
-                            self.reached_states[rs_next][fin] = rule as i32;
-                            mid |= self.final_states[fin] != 0 && ini != 0 && self.final_states[ini] == 0;
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if !tright_nl {
@@ -978,13 +849,12 @@ impl ZearchState {
             }
 
             self.rs_idx = rs_next;
-
             if mid { self.incr_count_seq(); }
             else if self.tsleft.match_ || self.tright.match_() { self.prop_count_seq(); }
             self.seq_counter = self.seq_counter_new;
             self.reached_states[self.rs_idx][0] = rule as i32;
         } else {
-            self.tleft = self.automaton[left as usize];
+            self.tleft  = self.automaton[left as usize];
             self.tright = self.automaton[right as usize];
             self.tsrule = TransitionSeq::default();
 
@@ -992,71 +862,35 @@ impl ZearchState {
             let tright = self.tright;
             self.tsrule.new_lines = tleft.new_lines() || tright.new_lines();
 
-            let rs_a = 0usize;
-            let rs_b = 1usize;
-            let mut mid = false;
-            let mut added = false;
+            let rs_a = 0usize; let rs_b = 1usize;
+            let mut mid = false; let mut added = false;
 
             if tleft.is_there() {
-                let lpairs = if tleft.pairs_used() != 0 { tleft.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..lpairs {
-                    let (ini, fin) = (tleft.initial[it] as usize, tleft.final_[it] as usize);
-                    if ini == 0 || self.reached_states[rs_a][ini] == -1 {
-                        self.reached_states[rs_a][fin] = left as i32;
-                        if self.final_states[fin] != 0 {
+                let left_i = left as i32;
+                Self::iter_pairs(tleft, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if ini == 0 || s.reached_states[rs_a][ini] == -1 {
+                        s.reached_states[rs_a][fin] = left_i;
+                        if s.final_states[fin] != 0 {
                             added = true;
-                            mid |= fin != 0 && self.final_states[fin] == 0;
+                            mid |= fin != 0 && s.final_states[fin] == 0;
                         }
                     }
-                }
-                let mut blk = tleft.first_block; let mut idx = tleft.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if ini == 0 || self.reached_states[rs_a][ini] == -1 {
-                            self.reached_states[rs_a][fin] = left as i32;
-                            if self.final_states[fin] != 0 {
-                                added = true;
-                                mid |= fin != 0 && self.final_states[fin] == 0;
-                            }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if tright.is_there() {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it] as usize, tright.final_[it] as usize);
-                    if ini == 0 || self.reached_states[rs_a][ini] == left as i32 {
-                        self.reached_states[rs_b][fin] = rule as i32;
-                        if self.final_states[fin] != 0 {
+                let left_i = left as i32; let rule_i = rule as i32;
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if ini == 0 || s.reached_states[rs_a][ini] == left_i {
+                        s.reached_states[rs_b][fin] = rule_i;
+                        if s.final_states[fin] != 0 {
                             added = true;
-                            mid |= ini != 0 && self.final_states[ini] == 0;
+                            mid |= ini != 0 && s.final_states[ini] == 0;
                         }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if ini == 0 || self.reached_states[rs_a][ini] == left as i32 {
-                            self.reached_states[rs_b][fin] = rule as i32;
-                            if self.final_states[fin] != 0 {
-                                added = true;
-                                mid |= ini != 0 && self.final_states[ini] == 0;
-                            }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if !tright.new_lines() {
@@ -1070,7 +904,6 @@ impl ZearchState {
 
             self.rs_idx = rs_b;
             self.reached_states[self.rs_idx][0] = rule as i32;
-
             if mid { self.incr_count_seq_1(true); }
             else if tleft.match_() || tright.match_() || added { self.incr_count_seq_1(false); }
         }
@@ -1104,30 +937,15 @@ impl ZearchState {
             }
 
             let mut mid = false;
-
             if tright.is_there() {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it] as usize, tright.final_[it] as usize);
-                    if self.reached_states[rs_cur][ini] == left as i32 {
-                        self.reached_states[rs_next][fin] = rule as i32;
-                        mid |= self.final_states[fin] != 0 && ini != 0 && self.final_states[ini] == 0;
+                let left_i = left as i32; let rule_i = rule as i32;
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if s.reached_states[rs_cur][ini] == left_i {
+                        s.reached_states[rs_next][fin] = rule_i;
+                        mid |= s.final_states[fin] != 0 && ini != 0 && s.final_states[ini] == 0;
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if self.reached_states[rs_cur][ini] == left as i32 {
-                            self.reached_states[rs_next][fin] = rule as i32;
-                            mid |= self.final_states[fin] != 0 && ini != 0 && self.final_states[ini] == 0;
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if !tright_nl {
@@ -1140,14 +958,12 @@ impl ZearchState {
             }
 
             self.rs_idx = rs_next;
-
             if mid { self.incr_count_seq(); }
             else if self.tsleft.match_ || tright.match_() { self.prop_count_seq(); }
-
             self.seq_counter = self.seq_counter_new;
             self.reached_states[self.rs_idx][0] = rule as i32;
         } else {
-            self.tleft = self.automaton[left as usize];
+            self.tleft  = self.automaton[left as usize];
             self.tright = self.automaton[right as usize];
             self.tsrule = TransitionSeq::default();
 
@@ -1155,71 +971,35 @@ impl ZearchState {
             let tright = self.tright;
             self.tsrule.new_lines = tleft.new_lines() || tright.new_lines();
 
-            let rs_a = 0usize;
-            let rs_b = 1usize;
-            let mut mid = false;
-            let mut added = false;
+            let rs_a = 0usize; let rs_b = 1usize;
+            let mut mid = false; let mut added = false;
 
             if tleft.is_there() {
-                let lpairs = if tleft.pairs_used() != 0 { tleft.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..lpairs {
-                    let (ini, fin) = (tleft.initial[it] as usize, tleft.final_[it] as usize);
-                    if ini == 0 || self.reached_states[rs_a][ini] == -1 {
-                        self.reached_states[rs_a][fin] = left as i32;
-                        if self.final_states[fin] != 0 {
+                let left_i = left as i32;
+                Self::iter_pairs(tleft, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if ini == 0 || s.reached_states[rs_a][ini] == -1 {
+                        s.reached_states[rs_a][fin] = left_i;
+                        if s.final_states[fin] != 0 {
                             added = true;
-                            mid |= fin != 0 && self.final_states[fin] == 0;
+                            mid |= fin != 0 && s.final_states[fin] == 0;
                         }
                     }
-                }
-                let mut blk = tleft.first_block; let mut idx = tleft.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if ini == 0 || self.reached_states[rs_a][ini] == -1 {
-                            self.reached_states[rs_a][fin] = left as i32;
-                            if self.final_states[fin] != 0 {
-                                added = true;
-                                mid |= fin != 0 && self.final_states[fin] == 0;
-                            }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if tright.is_there() {
-                let rpairs = if tright.pairs_used() != 0 { tright.pairs_used() as usize } else { NUM_PAIRS_INITIAL };
-                for it in 0..rpairs {
-                    let (ini, fin) = (tright.initial[it] as usize, tright.final_[it] as usize);
-                    if ini == 0 || self.reached_states[rs_a][ini] == left as i32 {
-                        self.reached_states[rs_b][fin] = rule as i32;
-                        if self.final_states[fin] != 0 {
+                let left_i = left as i32; let rule_i = rule as i32;
+                Self::iter_pairs(tright, |ini, fin| (ini, fin), |s, ini, fin| {
+                    let (ini, fin) = (ini as usize, fin as usize);
+                    if ini == 0 || s.reached_states[rs_a][ini] == left_i {
+                        s.reached_states[rs_b][fin] = rule_i;
+                        if s.final_states[fin] != 0 {
                             added = true;
-                            mid |= ini != 0 && self.final_states[ini] == 0;
+                            mid |= ini != 0 && s.final_states[ini] == 0;
                         }
                     }
-                }
-                let mut blk = tright.first_block; let mut idx = tright.first_index;
-                while blk != -1 {
-                    let pair = *self.mem.get(blk, idx);
-                    if pair.final_[0] == 0 { break; }
-                    for it in 0..NUM_PAIRS_PER_STRUCT {
-                        if pair.final_[it] == 0 { break; }
-                        let (ini, fin) = (pair.initial[it] as usize, pair.final_[it] as usize);
-                        if ini == 0 || self.reached_states[rs_a][ini] == left as i32 {
-                            self.reached_states[rs_b][fin] = rule as i32;
-                            if self.final_states[fin] != 0 {
-                                added = true;
-                                mid |= ini != 0 && self.final_states[ini] == 0;
-                            }
-                        }
-                    }
-                    blk = pair.next_block; idx = pair.next_index;
-                }
+                }, self);
             }
 
             if !tright.new_lines() {
@@ -1233,32 +1013,25 @@ impl ZearchState {
 
             self.rs_idx = rs_b;
             self.reached_states[self.rs_idx][0] = rule as i32;
-
             if mid { self.incr_count_seq_1(true); }
             else if tleft.match_() || tright.match_() || added { self.incr_count_seq_1(false); }
         }
     }
 
-    // ── Match expansion (for -l and -a modes) ─────────────────────────────
+    // ── Match expansion ────────────────────────────────────────────────────
 
     fn write_char(&mut self, leaf: u8) {
         if self.bufpos == MATCH_MAX_LENGTH - 1 {
             let s = std::str::from_utf8(&self.buffer[..self.bufpos]).unwrap_or("");
             print!("{}", s);
             self.bufpos = 0;
-            if leaf == b'\n' && self.bufpos > 0 && self.buffer[MATCH_MAX_LENGTH - 2] != b'\n' {
-                self.buffer[self.bufpos] = leaf;
-                self.bufpos += 1;
-            }
         }
         if leaf == b'\n' {
             if self.bufpos > 0 && self.buffer[self.bufpos - 1] != b'\n' {
-                self.buffer[self.bufpos] = leaf;
-                self.bufpos += 1;
+                self.buffer[self.bufpos] = leaf; self.bufpos += 1;
             }
         } else {
-            self.buffer[self.bufpos] = leaf;
-            self.bufpos += 1;
+            self.buffer[self.bufpos] = leaf; self.bufpos += 1;
         }
     }
 
@@ -1271,12 +1044,10 @@ impl ZearchState {
             if l || r {
                 let lsym = self.grammar[leaf as usize].left_symbol;
                 let rsym = self.grammar[leaf as usize].right_symbol;
-                self.expand_match(lsym, l, r);
-                self.expand_match(rsym, l, r);
+                self.expand_match(lsym, l, r); self.expand_match(rsym, l, r);
             }
             return;
         }
-
         let lsym = self.grammar[leaf as usize].left_symbol;
         let rsym = self.grammar[leaf as usize].right_symbol;
         let lcount = self.automaton[lsym as usize].count();
@@ -1284,23 +1055,13 @@ impl ZearchState {
         let self_count = self.automaton[leaf as usize].count();
         let lnl = self.automaton[lsym as usize].new_lines();
         let rnl = self.automaton[rsym as usize].new_lines();
-
         if lcount + rcount == self_count {
-            if r {
-                if !lnl { self.expand_match(lsym, l, true); }
-                else { self.expand_match(lsym, l, false); }
-            } else {
-                self.expand_match(lsym, l, false);
-            }
-            if l {
-                if !rnl { self.expand_match(rsym, true, r); }
-                else { self.expand_match(rsym, false, r); }
-            } else {
-                self.expand_match(rsym, false, r);
-            }
+            if r { if !lnl { self.expand_match(lsym, l, true); } else { self.expand_match(lsym, l, false); } }
+            else { self.expand_match(lsym, l, false); }
+            if l { if !rnl { self.expand_match(rsym, true, r); } else { self.expand_match(rsym, false, r); } }
+            else { self.expand_match(rsym, false, r); }
         } else {
-            self.expand_match(lsym, l, true);
-            self.expand_match(rsym, true, r);
+            self.expand_match(lsym, l, true); self.expand_match(rsym, true, r);
         }
     }
 
@@ -1310,9 +1071,7 @@ impl ZearchState {
         let rsym = self.grammar[leaf as usize].right_symbol;
         let rnl = if (rsym as usize) >= self.num_rules as usize {
             self.automaton_seq[(rsym - self.num_rules) as usize].new_lines
-        } else {
-            self.automaton[rsym as usize].new_lines()
-        };
+        } else { self.automaton[rsym as usize].new_lines() };
         if !rnl { self.expand_leaf_right(lsym); self.expand_leaf_right(rsym); }
         else { self.expand_leaf_right(rsym); }
     }
@@ -1323,9 +1082,7 @@ impl ZearchState {
         let rsym = self.grammar[leaf as usize].right_symbol;
         let lnl = if (lsym as usize) >= self.num_rules as usize {
             self.automaton_seq[(lsym - self.num_rules) as usize].new_lines
-        } else {
-            self.automaton[lsym as usize].new_lines()
-        };
+        } else { self.automaton[lsym as usize].new_lines() };
         if !lnl { self.expand_leaf_left(lsym); self.expand_leaf_left(rsym); }
         else { self.expand_leaf_left(lsym); }
     }
@@ -1338,21 +1095,16 @@ impl ZearchState {
             let seq = &self.automaton_seq[axiom - self.num_rules as usize];
             if seq.match_ {
                 let mut r = self.seq_counter as i64;
-                if seq.left { r += 1; }
-                if seq.right { r += 1; }
-                if !seq.new_lines { r += 1; }
-                r
+                if seq.left { r += 1; } if seq.right { r += 1; }
+                if !seq.new_lines { r += 1; } r
             } else { 0 }
         } else {
             if self.tsrule.match_ {
                 let mut r = self.seq_counter as i64;
-                if self.tsrule.left { r += 1; }
-                if self.tsrule.right { r += 1; }
-                if !self.tsrule.new_lines { r += 1; }
-                r
+                if self.tsrule.left { r += 1; } if self.tsrule.right { r += 1; }
+                if !self.tsrule.new_lines { r += 1; } r
             } else { 0 }
         };
-
         if self.mode != b'c' {
             let buf = self.buffer[..self.bufpos].to_vec();
             let s = std::str::from_utf8(&buf).unwrap_or("");
@@ -1380,7 +1132,7 @@ fn run_boolean_zearch(minimize: bool, data: &[u8], regex_str: &str) {
     let mut last_rule = num_rules;
     let mut flag = true;
 
-    'outer: for _l in 0..seq_len {
+    for _l in 0..seq_len {
         let mut exc: i32 = 0;
         let mut done = false;
         loop {
@@ -1389,13 +1141,11 @@ fn run_boolean_zearch(minimize: bool, data: &[u8], regex_str: &str) {
                 exc += 1;
                 let bits = 32 - rules_counter.leading_zeros();
                 let read = bitin.read_bits(bits);
-                stack.push(read);
-                state.rule = read;
+                stack.push(read); state.rule = read;
             } else {
                 exc -= 1;
                 if exc == 0 && flag { flag = false; break; }
-                state.right = stack.pop();
-                state.left = stack.pop();
+                state.right = stack.pop(); state.left = stack.pop();
                 if exc == 0 {
                     state.rule = last_rule; last_rule += 1; done = true;
                     stack.push(state.rule);
@@ -1461,7 +1211,6 @@ fn run_zearch(minimize: bool, data: &[u8], regex_str: &str, mode: u8) {
                         let rule = state.rule; let nr = state.num_rules;
                         state.automaton_seq[(rule - nr) as usize] = state.tsrule;
                         state.grammar[rule as usize] = GrammarRule { left_symbol: state.left, right_symbol: state.right };
-
                         if first_line {
                             let left = state.left;
                             if (left as usize) >= state.num_rules as usize {
@@ -1539,7 +1288,6 @@ fn run_zearch(minimize: bool, data: &[u8], regex_str: &str, mode: u8) {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-
     if args.len() <= 3 || args.len() >= 7 {
         eprintln!("Wrong arguments.");
         eprintln!("Usage: {} <option> <regex> <input_grammar>", args[0]);
@@ -1553,29 +1301,16 @@ fn main() {
 
     let mut minimize = false;
     let mut mode = b'c';
-
-    if args[args.len()-3].starts_with('-') {
-        mode = args[args.len()-3].as_bytes()[1];
-    }
-    for i in 1..args.len()-3 {
-        if args[i] == "-m" { minimize = true; }
-    }
+    if args[args.len()-3].starts_with('-') { mode = args[args.len()-3].as_bytes()[1]; }
+    for i in 1..args.len()-3 { if args[i] == "-m" { minimize = true; } }
     if mode != b'a' && mode != b'c' && mode != b'l' && mode != b'b' {
-        eprintln!("Invalid option. Using -c by default");
-        mode = b'c';
+        eprintln!("Invalid option. Using -c by default"); mode = b'c';
     }
 
-    let regex_str = &args[args.len()-2];
-    let input_file = &args[args.len()-1];
-
-    let data = std::fs::read(input_file).unwrap_or_else(|e| {
-        eprintln!("Error reading {}: {}", input_file, e);
-        std::process::exit(-1);
+    let data = std::fs::read(&args[args.len()-1]).unwrap_or_else(|e| {
+        eprintln!("Error reading {}: {}", args[args.len()-1], e); std::process::exit(-1);
     });
 
-    if mode == b'b' {
-        run_boolean_zearch(minimize, &data, regex_str);
-    } else {
-        run_zearch(minimize, &data, regex_str, mode);
-    }
+    if mode == b'b' { run_boolean_zearch(minimize, &data, &args[args.len()-2]); }
+    else { run_zearch(minimize, &data, &args[args.len()-2], mode); }
 }
