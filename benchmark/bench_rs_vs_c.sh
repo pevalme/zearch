@@ -31,7 +31,7 @@ import random, sys
 words = ['hello', 'world', 'foo', 'bar', 'error', 'warning', 'info', 'debug',
          'test', 'data', 'log', 'search', 'match', 'text', 'line', 'file']
 tmpdir = sys.argv[1]
-for size_label, n_lines in [('10K', 500), ('100K', 5000), ('500K', 25000), ('1M', 50000), ('5M', 250000), ('10M', 500000)]:
+for size_label, n_lines in [('10K', 500), ('100K', 5000), ('500K', 25000), ('1M', 50000), ('5M', 250000), ('10M', 500000), ('500M', 11900000)]:
     lines = [' '.join(random.choices(words, k=random.randint(3,10))) for _ in range(n_lines)]
     text = '\n'.join(lines) + '\n'
     path = f'{tmpdir}/{size_label}.txt'
@@ -41,7 +41,7 @@ for size_label, n_lines in [('10K', 500), ('100K', 5000), ('500K', 25000), ('1M'
 " "$TMPDIR_BM"
 
 info "Compressing with Re-Pair ..."
-for label in 10K 100K 500K 1M 5M 10M; do
+for label in 10K 100K 500K 1M 5M 10M 500M; do
     "$REPAIR" "$TMPDIR_BM/${label}.txt" 2>/dev/null
     info "  ${label}.txt.rp done"
 done
@@ -85,7 +85,7 @@ printf "\n"
 printf "%-8s  %-20s  %10s  %10s  %10s\n" "SIZE" "PATTERN" "C (s)" "Rust (s)" "Speedup"
 printf "%-8s  %-20s  %10s  %10s  %10s\n" "--------" "--------------------" "----------" "----------" "----------"
 
-for label in 10K 100K 500K 1M 5M 10M; do
+for label in 10K 100K 500K 1M 5M 10M 500M; do
     rp="$TMPDIR_BM/${label}.txt.rp"
     for pat in "${PATTERNS[@]}"; do
         c_t=$(time_secs "$ZEARCH_C" -c "$pat" "$rp")
@@ -104,7 +104,7 @@ printf "\n"
 printf "%-8s  %-20s  %10s  %10s  %10s\n" "SIZE" "PATTERN" "C (s)" "Rust (s)" "Speedup"
 printf "%-8s  %-20s  %10s  %10s  %10s\n" "--------" "--------------------" "----------" "----------" "----------"
 
-for label in 10K 100K 500K 1M 5M 10M; do
+for label in 10K 100K 500K 1M 5M 10M 500M; do
     rp="$TMPDIR_BM/${label}.txt.rp"
     for pat in "hello" "zzzzzzzzz"; do
         c_t=$(time_secs "$ZEARCH_C" -b "$pat" "$rp")

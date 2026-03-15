@@ -125,7 +125,7 @@ datasets = {
 }
 
 for name, gen in datasets.items():
-    for size_label, target_bytes in [('100KB', 100*1024), ('1MB', 1024*1024)]:
+    for size_label, target_bytes in [('100KB', 100*1024), ('1MB', 1024*1024), ('500MB', 500*1024*1024)]:
         lines = []
         total = 0
         while total < target_bytes:
@@ -183,7 +183,7 @@ for dataset in logs gutenberg subtitles; do
     printf "%-8s  %-12s  %-22s  %10s  %10s  %10s\n" "SIZE" "PATTERN" "REGEX" "C (s)" "Rust (s)" "Speedup"
     printf "%-8s  %-12s  %-22s  %10s  %10s  %10s\n" "--------" "------------" "----------------------" "----------" "----------" "----------"
 
-    for size in 100KB 1MB; do
+    for size in 100KB 1MB 500MB; do
         rp="$TMPDIR_BM/${dataset}_${size}.txt.rp"
         for idx in "${!PATTERNS[@]}"; do
             pat="${PATTERNS[$idx]}"
